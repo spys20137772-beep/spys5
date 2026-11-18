@@ -1,0 +1,173 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>무한 연금술</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one-screen phone app — header, crucible workbench (two slots → result), scrollable inventory */
+:root{
+  --bg:#141029; --panel:#1f1940; --line:#3a3170; --fg:#efeaff; --dim:#a79fd0;
+  --gold:#ffc65c; --glow:#ff7ad9;
+  --display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);overflow:hidden;
+  background-image:radial-gradient(circle at 50% 18%,#2c2160 0,transparent 55%);}
+.app{height:100%;display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;box-sizing:border-box}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+h1{font-family:var(--display);font-weight:400;font-size:1.7rem;margin:0;letter-spacing:.02em;color:var(--gold)}
+.count{font-size:.9rem;color:var(--dim);font-variant-numeric:tabular-nums}
+.count b{color:var(--fg);font-size:1.1rem}
+.bench{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:6px;text-align:center}
+.slot{aspect-ratio:1;max-width:100%;border:2px dashed var(--line);border-radius:16px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;font-size:.8rem;color:var(--dim);transition:.2s;padding:4px;min-width:0}
+.slot.full{border-style:solid;border-color:var(--gold);color:var(--fg)}
+.slot .e{font-size:2rem;line-height:1.1}
+.slot .n{word-break:keep-all;overflow-wrap:anywhere}
+.op{font-family:var(--display);color:var(--dim);font-size:1.3rem}
+.result.new{border-color:var(--glow);box-shadow:0 0 24px var(--glow);animation:pop .5s}
+.result.busy .e{animation:spin 1s linear infinite}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg{min-height:1.4em;text-align:center;font-size:.95rem;color:var(--dim)}
+.msg.hot{color:var(--glow);font-family:var(--display);font-size:1.1rem}
+.tools{display:flex;gap:8px}
+.tools input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:12px;padding:10px 12px;font:inherit}
+button{font:inherit;cursor:pointer}
+.ghost{background:none;border:1px solid var(--line);color:var(--dim);border-radius:12px;padding:0 12px}
+.inv{flex:1;overflow-y:auto;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;padding-bottom:8px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+  border-radius:999px;padding:8px 14px;font-size:.95rem;transition:transform .1s}
+.chip:active{transform:scale(.94)}
+.chip.sel{border-color:var(--gold);background:#3b2f17}
+.chip.fresh{border-color:var(--glow)}
+.chip:focus-visible,.ghost:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.confirm{display:flex;gap:8px;align-items:center;justify-content:center;font-size:.9rem}
+.confirm button{border-radius:10px;padding:6px 12px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.confirm .yes{border-color:var(--glow);color:var(--glow)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>무한 연금술</h1>
+    <div class="count">발견 <b id="cnt">4</b>개</div>
+  </header>
+
+  <div class="bench">
+    <div class="slot" id="s0"><span class="e">＋</span><span class="n">재료 1</span></div>
+    <div class="op">+</div>
+    <div class="slot" id="s1"><span class="e">＋</span><span class="n">재료 2</span></div>
+    <div class="op">=</div>
+    <div class="slot result" id="res"><span class="e">？</span><span class="n">결과</span></div>
+  </div>
+  <div class="msg" id="msg">아래 재료 두 개를 눌러서 섞어봐</div>
+
+  <div class="tools">
+    <input id="q" type="search" placeholder="재료 찾기" aria-label="재료 찾기">
+    <button class="ghost" id="resetBtn">처음부터</button>
+  </div>
+  <div class="confirm" id="confirm" hidden>
+    <span>발견한 거 다 지울까?</span>
+    <button class="yes" id="yes">지우기</button><button id="no">취소</button>
+  </div>
+
+  <div class="inv" id="inv"></div>
+</div>
+
+<script>
+const BASE=[["불","🔥"],["물","💧"],["흙","🪨"],["바람","🌬️"]];
+// 오프라인용 기본 조합표 (AI 없이도 돌아가게)
+const BOOK={
+"불+물":["증기","♨️"],"불+흙":["용암","🌋"],"불+바람":["연기","💨"],"물+흙":["진흙","🟫"],"물+바람":["파도","🌊"],"흙+바람":["먼지","🌫️"],
+"불+불":["태양","☀️"],"물+물":["바다","🌊"],"흙+흙":["산","⛰️"],"바람+바람":["태풍","🌀"],
+"바람+증기":["구름","☁️"],"구름+물":["비","🌧️"],"비+흙":["식물","🌱"],"비+태양":["무지개","🌈"],
+"용암+물":["돌","🪨"],"돌+불":["금속","⚙️"],"금속+불":["칼","🗡️"],"식물+태양":["나무","🌳"],
+"나무+불":["숯","⚫"],"나무+금속":["도끼","🪓"],"진흙+불":["벽돌","🧱"],"벽돌+벽돌":["집","🏠"],
+"식물+물":["해초","🌿"],"바다+식물":["생명","🧬"],"생명+흙":["사람","🧍"],"사람+칼":["전사","⚔️"],
+"사람+집":["마을","🏘️"],"구름+불":["번개","⚡"],"번개+금속":["전기","🔌"],"전기+사람":["로봇","🤖"],
+"태풍+바다":["허리케인","🌪️"],"산+불":["화산","🌋"],"무지개+사람":["행복","😊"],"먼지+태양":["사막","🏜️"]
+};
+for(const k of Object.keys(BOOK)){const nk=k.split("+").sort().join("+");if(nk!==k){BOOK[nk]=BOOK[k];delete BOOK[k];}}
+const KEY="alch-v1";
+let S={items:BASE.map(([n,e])=>({n,e,fresh:false})),book:{}};
+try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.items)S=d;}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let pick=[],busy=false,sample=null;
+claude?.use?.("sample").then(s=>sample=s).catch(()=>{});
+
+const $=id=>document.getElementById(id);
+const key=(a,b)=>[a,b].sort().join("+");
+function fill(el,it,ph){el.classList.toggle("full",!!it);
+  el.querySelector(".e").textContent=it?it.e:"＋";el.querySelector(".n").textContent=it?it.n:ph;}
+function render(){
+  const q=$("q").value.trim();
+  $("cnt").textContent=S.items.length;
+  const inv=$("inv");inv.innerHTML="";
+  S.items.filter(it=>!q||it.n.includes(q)).forEach(it=>{
+    const b=document.createElement("button");
+    b.className="chip"+(pick.some(p=>p.n===it.n)?" sel":"")+(it.fresh?" fresh":"");
+    b.textContent="";const e=document.createElement("span");e.textContent=it.e;b.append(e,it.n);
+    b.onclick=()=>choose(it);inv.append(b);
+  });
+  fill($("s0"),pick[0],"재료 1");fill($("s1"),pick[1],"재료 2");
+}
+function say(t,hot){const m=$("msg");m.textContent=t;m.classList.toggle("hot",!!hot);}
+
+async function choose(it){
+  if(busy)return;
+  if(pick.length>=2)pick=[];
+  pick.push(it);it.fresh=false;
+  const r=$("res");r.className="slot result";r.querySelector(".e").textContent="？";r.querySelector(".n").textContent="결과";
+  render();
+  if(pick.length<2){say("하나 더 골라봐");return;}
+  await combine(pick[0],pick[1]);
+}
+
+async function invent(a,b){
+  if(!sample)return null;
+  const prompt=`조합 게임의 결과를 하나 만들어. 재료: "${a.n}"(${a.e}) + "${b.n}"(${b.e}).
+규칙: 결과는 실제로 떠올릴 법한 사물/개념/생물/장소/인물 유형 하나. 한국어 1~4단어. 재료 이름 그대로 반복 금지. 너무 뻔하면 살짝 재치 있게.
+JSON만 출력: {"name":"결과이름","emoji":"이모지 하나"}`;
+  try{const v=await sample.json(prompt,{modelTier:"quick"});
+    if(v&&typeof v.name==="string"&&v.name.trim())return[v.name.trim().slice(0,16),(v.emoji||"✨").slice(0,4)];
+  }catch(e){if(e&&e.code==="not_granted")sample=null;}
+  return null;
+}
+
+async function combine(a,b){
+  const k=key(a.n,b.n),r=$("res");
+  let out=S.book[k]||BOOK[k];
+  if(!out){
+    busy=true;r.classList.add("busy");r.querySelector(".e").textContent="⚗️";r.querySelector(".n").textContent="섞는 중…";
+    say("부글부글…");
+    out=await invent(a,b);
+    busy=false;r.classList.remove("busy");
+    if(!out){r.querySelector(".e").textContent="💭";r.querySelector(".n").textContent="아무 일도…";
+      say(sample?"이번엔 반응이 없어. 다른 조합 해봐":"이 조합은 아직 몰라. 다른 걸 섞어봐");pick=[];render();return;}
+    S.book[k]=out;
+  }
+  const [n,e]=out;
+  r.querySelector(".e").textContent=e;r.querySelector(".n").textContent=n;
+  if(!S.items.some(it=>it.n===n)){
+    S.items.push({n,e,fresh:true});
+    r.classList.remove("new");void r.offsetWidth;r.classList.add("new");
+    say(`새로운 발견! ${e} ${n}`,true);
+  }else say(`${e} ${n} (이미 찾은 거)`);
+  save();pick=[];render();
+}
+
+$("q").oninput=render;
+$("resetBtn").onclick=()=>{$("confirm").hidden=false};
+$("no").onclick=()=>{$("confirm").hidden=true};
+$("yes").onclick=()=>{S={items:BASE.map(([n,e])=>({n,e,fresh:false})),book:{}};save();pick=[];$("confirm").hidden=true;
+  const r=$("res");r.className="slot result";r.querySelector(".e").textContent="？";r.querySelector(".n").textContent="결과";
+  say("처음부터! 재료 두 개를 눌러봐");render();};
+render();
+</script>
+
+</body></html>
