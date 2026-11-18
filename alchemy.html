@@ -99,7 +99,7 @@ let S={items:BASE.map(([n,e])=>({n,e,fresh:false})),book:{}};
 try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.items)S=d;}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 let pick=[],busy=false,sample=null;
-claude?.use?.("sample").then(s=>sample=s).catch(()=>{});
+try{window.claude?.use?.("sample")?.then(s=>sample=s).catch(()=>{});}catch(e){}
 
 const $=id=>document.getElementById(id);
 const key=(a,b)=>[a,b].sort().join("+");
