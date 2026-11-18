@@ -74,10 +74,9 @@ header h1 span{color:var(--acc)}
 .cm .who button{margin-left:auto;color:var(--dim);font-size:12px;text-decoration:underline}
 .cm p{margin:4px 0 0;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .empty{color:var(--dim);font-size:14px;padding:26px 0;text-align:center}
-.cform{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.cform{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 #ctext{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:#0c0d12;color:var(--ink);font:inherit;font-size:15px;outline:none;resize:none;height:46px}
-#ctext:focus,#nick:focus{border-color:var(--acc)}
-#nick{flex-basis:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:#0c0d12;color:var(--ink);font:inherit;font-size:14px;outline:none}
+#ctext:focus{border-color:var(--acc)}
 #csend{padding:0 16px;border-radius:10px;background:var(--acc);color:#0c0d12;font-weight:700}
 #csend:disabled{opacity:.4}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:#fff;color:#0c0d12;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;max-width:90vw}
@@ -120,7 +119,6 @@ header h1 span{color:var(--acc)}
   <div class="shead"><b id="stitle"></b><button class="pbtn" id="sclose">닫기</button></div>
   <div id="clist"></div>
   <form class="cform" id="cform">
-   <input id="nick" maxlength="12" autocomplete="off" placeholder="닉네임 (최대 12자)" aria-label="닉네임">
    <textarea id="ctext" maxlength="300" placeholder="플레이 후기, 버그, 아이디어..." aria-label="댓글"></textarea>
    <button id="csend" type="submit">등록</button>
   </form>
@@ -133,19 +131,19 @@ header h1 span{color:var(--acc)}
 const $=id=>document.getElementById(id);
 const HEART='<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
 const GAMES=[
- {id:'stop-world',name:'멈춘 세계',tag:'탄 피하기',file:'stop-world.html',
+ {id:'stop-world',name:'멈춘 세계',tag:'탄 피하기',file:'games/stop-world.html',
   desc:'움직일 때만 시간이 흐른다. 멈춰서 탄을 읽고, 한 칸씩 계산해서 피해.',
   art:'<rect width="300" height="128" fill="#101426"/><g fill="#ff4d6d"><circle cx="60" cy="30" r="5"/><circle cx="110" cy="70" r="5"/><circle cx="175" cy="38" r="5"/><circle cx="230" cy="84" r="5"/><circle cx="262" cy="26" r="5"/><circle cx="150" cy="100" r="5"/></g><g stroke="#ff4d6d" stroke-width="2" opacity=".35"><path d="M60 30l-26-14M110 70l-30-8M175 38l-22-20M230 84l-30 6M262 26l-24-10"/></g><circle cx="200" cy="58" r="9" fill="#6ee7ff"/><circle cx="200" cy="58" r="17" fill="none" stroke="#6ee7ff" stroke-width="1.5" opacity=".5"/>'},
- {id:'thief',name:'밤의 도둑',tag:'잠입',file:'thief.html',
+ {id:'thief',name:'밤의 도둑',tag:'잠입',file:'games/thief.html',
   desc:'경비 시야를 피해 랜덤 저택을 턴다. 발각 게이지가 차기 전에 빠져나와.',
   art:'<rect width="300" height="128" fill="#0d1420"/><g stroke="#24324a" stroke-width="3" fill="none"><path d="M20 20h110v50M170 20h110v88H20V70M130 108V90"/></g><path d="M210 60l70-34v68z" fill="#ffd84d" opacity=".28"/><circle cx="210" cy="60" r="8" fill="#ffd84d"/><circle cx="74" cy="84" r="7" fill="#8ff0a4"/><rect x="92" y="34" width="12" height="12" fill="#c9a227"/>'},
- {id:'physics',name:'물리 놀이터',tag:'3D 샌드박스',file:'physics.html',
+ {id:'physics',name:'물리 놀이터',tag:'3D 샌드박스',file:'games/physics.html',
   desc:'목표 없음. 블록을 쌓고, 던지고, 무너뜨리면서 그냥 노는 3D 물리 놀이터.',
   art:'<rect width="300" height="128" fill="#1a1530"/><path d="M0 104h300v24H0z" fill="#2a2350"/><g stroke="#0c0d12" stroke-width="2"><rect x="150" y="70" width="34" height="34" fill="#ff8a3c"/><rect x="186" y="70" width="34" height="34" fill="#6ee7ff"/><rect x="168" y="36" width="34" height="34" fill="#d7ff3a" transform="rotate(8 185 53)"/><rect x="236" y="52" width="26" height="26" fill="#ff4d6d" transform="rotate(-24 249 65)"/></g><circle cx="76" cy="54" r="16" fill="#c084fc" stroke="#0c0d12" stroke-width="2"/><path d="M40 70q18-22 36-16" stroke="#c084fc" stroke-width="2" fill="none" stroke-dasharray="4 5" opacity=".6"/>'},
- {id:'swing-run',name:'SWING RUN',tag:'그래플 러너',file:'swing-run.html',
+ {id:'swing-run',name:'SWING RUN',tag:'그래플 러너',file:'games/swing-run.html',
   desc:'꾹 눌러 고리에 줄을 걸고, 떼서 날아가. 뒤에서 쫓아오는 것보다 빨라야 해.',
   art:'<rect width="300" height="128" fill="#0b0424"/><path d="M0 118h300" stroke="#ff2b6a" stroke-width="4"/><g fill="none" stroke="#00f0ff" stroke-width="3"><circle cx="90" cy="30" r="9"/><circle cx="190" cy="24" r="9"/><circle cx="270" cy="40" r="9"/></g><path d="M190 24L150 82" stroke="#fff" stroke-width="2"/><circle cx="150" cy="82" r="7" fill="#fff"/><path d="M96 70q26 26 54 12" stroke="#ff2bd6" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/><rect x="0" y="0" width="18" height="128" fill="#ff2b6a" opacity=".35"/>'},
- {id:'orbit-jump',name:'궤도 점프',tag:'원터치 점프',file:'orbit-jump.html',
+ {id:'orbit-jump',name:'궤도 점프',tag:'원터치 점프',file:'games/orbit-jump.html',
   desc:'행성 궤도를 도는 탐사선. 딱 맞는 순간에 탭해서 다음 행성의 중력권으로 뛰어들어.',
   art:'<rect width="300" height="128" fill="#0b1030"/><g fill="#eef0ff" opacity=".6"><rect x="20" y="18" width="2" height="2"/><rect x="250" y="14" width="2" height="2"/><rect x="140" y="110" width="2" height="2"/><rect x="40" y="96" width="2" height="2"/><rect x="280" y="100" width="2" height="2"/></g><circle cx="90" cy="76" r="44" fill="none" stroke="#9aa3d6" stroke-width="1.2" stroke-dasharray="3 6" opacity=".5"/><circle cx="90" cy="76" r="20" fill="#ff8a6b"/><circle cx="222" cy="46" r="40" fill="none" stroke="#6be3c5" stroke-width="1.4" stroke-dasharray="3 6"/><circle cx="222" cy="46" r="16" fill="#6be3c5"/><ellipse cx="222" cy="46" rx="27" ry="7" fill="none" stroke="#eef0ff" stroke-width="2" opacity=".6" transform="rotate(-20 222 46)"/><path d="M128 52l30-10" stroke="#eef0ff" stroke-width="1.5" stroke-dasharray="2 5" opacity=".6"/><path d="M134 50l-12-5 3 5-3 5z" fill="#eef0ff"/><path d="M170 74l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd36b"/>'}
 ];
@@ -215,7 +213,7 @@ async function renderSheet(){
  for(const c of list){
   const el=document.createElement('div');el.className='cm';
   const who=document.createElement('div');who.className='who';
-  const b=document.createElement('b');b.textContent=(c.uid===st.me&&st.local)?'나':(((st.cmts.get(c.uid)||{}).name||'테스터')+(c.uid===st.me?' (나)':''));
+  const b=document.createElement('b');b.textContent=c.uid===st.me?(st.local?'나':(st.names[c.uid]||'나')):(st.names[c.uid]||'테스터');
   const t=document.createElement('span');t.textContent=fmt(c.ts);who.append(b,t);
   if(c.uid===st.me||st.owner){const d=document.createElement('button');d.type='button';d.textContent='삭제';d.addEventListener('click',()=>delComment(c.uid,c.id));who.appendChild(d);}
   const p=document.createElement('p');p.textContent=c.t;el.append(who,p);box.appendChild(el);
@@ -232,13 +230,13 @@ async function writeDoc(kind,data){
  if(st.local){(kind==='likes'?st.likes:st.cmts).set(st.me,data);saveLocal();refresh();return true;}
  if(!st.db||!st.me){toast('아직 연결 중이야. 잠깐 뒤에 다시 해봐.');return false;}
  if(st.busy)return false;st.busy=true;
- try{if(kind==='comments')data.name=nickName();await st.fb.setDoc(st.fb.doc(st.fb.fs,COL[kind],st.me),data);return true;}
- catch(e){toast(e&&e.code==='permission-denied'?'저장이 거부됐어. Firestore 규칙을 확인해봐.':'저장에 실패했어. 다시 시도해봐.');return false;}
+ try{await st.db.doc(kind+'/'+st.me).set(data);return true;}
+ catch(e){toast(e&&e.code==='invalid_argument'?'쓰기 권한이 없어. 기여자 이상으로 공유받아야 해.':'저장에 실패했어. 다시 시도해봐.');return false;}
  finally{st.busy=false;}
 }
 async function writeOther(uid,data){ // owner moderation
  if(st.busy)return;st.busy=true;
- try{}catch(e){}finally{st.busy=false;}
+ try{await st.db.doc('comments/'+uid).set(data);}catch(e){toast('삭제에 실패했어.');}finally{st.busy=false;}
 }
 function toggleLike(g){
  const cur=st.likes.get(st.me),m=Object.assign({},cur&&cur.g);
@@ -279,29 +277,21 @@ function goLocal(){
  try{const s=JSON.parse(localStorage.getItem('hub_local')||'{}');if(s.l)st.likes.set('local',s.l);if(s.c)st.cmts.set('local',s.c);}catch(e){}
  const n=$('note');n.textContent='지금은 공유 저장소에 연결되지 않아서 좋아요·댓글이 이 기기에만 저장돼.';n.hidden=false;refresh();
 }
-const FB_CFG={apiKey:"AIzaSyCR61WTWBGa06Ccpn9hCK5EsxITSOH9oDE",authDomain:"boss-8ac97.firebaseapp.com",projectId:"boss-8ac97",storageBucket:"boss-8ac97.firebasestorage.app",messagingSenderId:"344882899757",appId:"1:344882899757:web:8069a30e0a259d570a01a4"};
-const FB_VER='10.12.2',COL={likes:'arcade_likes',comments:'arcade_comments'};
-function nickName(){return ($('nick').value.trim().slice(0,12))||'테스터';}
-try{$('nick').value=localStorage.getItem('hub_nick')||'';}catch(e){}
-$('nick').addEventListener('change',()=>{try{localStorage.setItem('hub_nick',$('nick').value.trim().slice(0,12));}catch(e){}});
 buildCards();refresh();
 (async()=>{
- const n=$('note');
- try{
-  const base='https://www.gstatic.com/firebasejs/'+FB_VER+'/';
-  const [A,AU,F]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);
-  const app=A.initializeApp(FB_CFG),fs=F.getFirestore(app);
-  const cred=await AU.signInAnonymously(AU.getAuth(app));
-  st.me=cred.user.uid;st.fb={fs,doc:F.doc,setDoc:F.setDoc};st.db=true;
-  let got=0;
-  const timer=setTimeout(()=>{n.textContent='좋아요·댓글을 아직 불러오지 못했어. 연결되면 자동으로 보여.';n.hidden=false;},10000);
-  const done=()=>{if(++got>=2){clearTimeout(timer);n.hidden=true;}};
-  const sub=(kind,map)=>{let first=true;F.onSnapshot(F.collection(fs,COL[kind]),s=>{
-    map.clear();s.forEach(d=>map.set(d.id,d.data()));
-    if(first){first=false;done();}refresh();
-   },()=>{clearTimeout(timer);n.textContent='댓글 저장소를 읽을 수 없어. Firestore 규칙이 추가됐는지 확인해봐.';n.hidden=false;});};
-  sub('likes',st.likes);sub('comments',st.cmts);
- }catch(e){goLocal();}
+ let db=null,user=null;
+ try{if(window.claude&&claude.use){[db,user]=await Promise.all([claude.use('db'),claude.use('user')]);}}catch(e){}
+ let me=null;try{me=user?await user.id():null;}catch(e){}
+ if(!db||!me){goLocal();return;}
+ st.db=db;st.user=user;st.me=me;try{st.owner=!!(await user.isOwner());}catch(e){}
+ const n=$('note');let got=0;
+ const timer=setTimeout(()=>{n.textContent='좋아요·댓글을 아직 불러오지 못했어. 연결되면 자동으로 보여.';n.hidden=false;},10000);
+ const done=()=>{if(++got>=2){clearTimeout(timer);n.hidden=true;}};
+ const sub=(name,map)=>{let first=true;db.collection(name).onSnapshot(s=>{
+   map.clear();for(const d of s.docs){const v=d.data();if(v)map.set(d.id,v);}
+   if(first&&!s.metadata.fromCache){first=false;done();}refresh();
+  },()=>{if(first){first=false;done();}});};
+ sub('likes',st.likes);sub('comments',st.cmts);
 })();
 </script>
 </body>

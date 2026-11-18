@@ -1,68 +1,70 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>궤도 점프</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
 <style>
+/* Layout: one tall phone-shaped play column, centered; HUD and overlays float over the canvas */
 :root {
-  --void: #0b1030; --void-2: #18144a; --ink: #eef0ff; --mute: #9aa3d6;
-  --coral: #ff8a6b; --mint: #6be3c5; --gold: #ffd36b; --sky: #7cc3ff; --violet: #9d8bff;
+  --void: #0b1030;
+  --void-2: #18144a;
+  --ink: #eef0ff;
+  --mute: #9aa3d6;
+  --coral: #ff8a6b;
+  --mint: #6be3c5;
+  --gold: #ffd36b;
   --font-display: "Do Hyeon", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color-scheme: dark;
 }
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+html, body { height: 100%; }
 [hidden] { display: none !important; }
 body {
   background: radial-gradient(120% 80% at 50% 100%, var(--void-2), var(--void) 70%);
   background-color: var(--void);
-  color: var(--ink); font-family: var(--font-body);
+  color: var(--ink);
+  font-family: var(--font-body);
   overflow: hidden;
   -webkit-user-select: none; user-select: none;
   -webkit-tap-highlight-color: transparent;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-.stage { position: relative; height: 100%; max-width: 480px; margin: 0 auto; touch-action: manipulation; overflow: hidden; }
-canvas#game { display: block; width: 100%; height: 100%; cursor: pointer; }
-
+.stage {
+  position: relative;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  touch-action: manipulation;
+}
+canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
 .hud {
   position: absolute; top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: flex-start;
-  padding-top: 14px;
+  padding-block: 14px 0;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  pointer-events: none; font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
-.score { font-family: var(--font-display); font-size: 44px; line-height: 1; transition: color .2s; }
-.score.dbl { color: var(--gold); text-shadow: 0 0 12px rgba(255,211,107,.6); }
+.score { font-family: var(--font-display); font-size: 44px; line-height: 1; }
 .label { font-size: 12px; letter-spacing: .12em; color: var(--mute); }
-.best { text-align: right; display: grid; justify-items: end; }
+.best { text-align: right; }
 .best b { font-family: var(--font-display); font-weight: 400; font-size: 22px; display: block; color: var(--gold); }
 .stars-count { font-size: 14px; color: var(--gold); margin-top: 4px; }
-.combo { font-family: var(--font-display); font-size: 18px; color: var(--mint); margin-top: 4px; min-height: 20px; }
-.ptag { font-size: 13px; color: var(--ink); opacity: .85; min-height: 18px; }
-button.mute {
-  pointer-events: auto; margin-top: 8px; width: 38px; height: 38px; padding: 0;
-  border-radius: 50%; font-size: 17px; font-family: inherit;
-  background: rgba(238,240,255,.1); color: var(--ink); box-shadow: none;
-}
 
 .overlay {
   position: absolute; inset: 0;
-  display: flex; flex-direction: column; overflow-y: auto;
-  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
-  background: rgba(11, 16, 48, .62);
-  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(11, 16, 48, .55);
+  backdrop-filter: blur(2px);
 }
-.panel { margin: auto; text-align: center; width: 100%; max-width: 330px; display: grid; gap: 12px; justify-items: center; padding: 12px 0; }
+.panel { text-align: center; max-width: 320px; display: grid; gap: 14px; justify-items: center; }
 .panel h1 {
-  font-family: var(--font-display); font-weight: 400; font-size: 58px; line-height: 1; margin: 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 64px; line-height: 1; margin: 0;
+  letter-spacing: .02em;
+  text-wrap: balance;
   background: linear-gradient(180deg, var(--ink) 30%, var(--mint));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
@@ -71,118 +73,42 @@ button.mute {
 .panel .big { font-family: var(--font-display); font-size: 72px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
 .legend { display: grid; gap: 6px; font-size: 14px; color: var(--ink); text-align: left; }
 .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
-
 button {
   font-family: var(--font-display); font-size: 24px;
   color: var(--void); background: var(--mint);
-  border: 0; border-radius: 999px; padding: 12px 30px; cursor: pointer;
-  box-shadow: 0 0 0 4px rgba(107,227,197,.2), 0 8px 24px rgba(107,227,197,.25);
+  border: 0; border-radius: 999px;
+  padding: 12px 40px; cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(107, 227, 197, .2), 0 8px 24px rgba(107, 227, 197, .25);
   transition: transform .12s ease;
 }
 button:hover { transform: translateY(-2px); }
 button:active { transform: translateY(1px); }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
-button.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px rgba(238,240,255,.35); font-size: 20px; padding: 10px 20px; }
-.btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; }
 .hint { font-size: 13px; color: var(--mute); }
-.wallet { font-family: var(--font-display); color: var(--gold); font-size: 20px; }
-
-.missions { width: 100%; display: grid; gap: 7px; text-align: left; background: rgba(238,240,255,.06); border: 1px solid rgba(238,240,255,.08); border-radius: 14px; padding: 10px 12px; }
-.missions h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 17px; color: var(--gold); }
-.mission { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 1.4; }
-.mission.done { color: var(--mint); }
-.mission.done span:first-child { text-decoration: line-through; text-decoration-color: rgba(107,227,197,.6); }
-.mission .rw { color: var(--gold); white-space: nowrap; }
-.mission.done .rw { color: var(--mint); }
-
-.toast {
-  position: absolute; left: 50%; top: calc(96px + env(safe-area-inset-top, 0px)); z-index: 20;
-  transform: translate(-50%, -10px); opacity: 0; transition: opacity .25s, transform .25s;
-  background: rgba(11,16,48,.9); border: 1px solid var(--gold); color: var(--gold);
-  padding: 8px 18px; border-radius: 999px; font-family: var(--font-display); font-size: 18px;
-  pointer-events: none; white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-.discover {
-  position: absolute; left: 50%; top: calc(150px + env(safe-area-inset-top, 0px)); z-index: 19; width: min(270px, 78%);
-  transform: translate(-50%, 10px) scale(.9); opacity: 0; transition: opacity .3s, transform .3s;
-  background: rgba(11,16,48,.8); border: 1px solid rgba(107,227,197,.6); border-radius: 18px;
-  padding: 14px 16px; text-align: center; pointer-events: none;
-  box-shadow: 0 0 30px rgba(107,227,197,.25);
-}
-.discover.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
-.dc-top { font-size: 12px; letter-spacing: .14em; color: var(--mint); }
-.dc-ic { font-size: 40px; line-height: 1.2; margin-top: 4px; }
-.dc-name { font-family: var(--font-display); font-size: 26px; color: var(--ink); }
-.dc-time { font-size: 13px; color: var(--gold); }
-.dc-desc { font-size: 14px; color: var(--mute); line-height: 1.5; margin-top: 4px; }
-
-.shop-panel { max-width: 380px; }
-.shop-head { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-.shop-head h2 { color: var(--gold); }
-.sec { width: 100%; text-align: left; font-family: var(--font-display); font-size: 18px; color: var(--mute); margin-top: 4px; }
-.shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
-button.card {
-  all: unset; box-sizing: border-box; cursor: pointer;
-  display: grid; justify-items: center; gap: 4px; padding: 10px 4px;
-  border-radius: 14px; background: rgba(238,240,255,.06);
-  font-size: 13px; color: var(--ink); text-align: center; font-family: var(--font-body);
-}
-button.card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-button.card.on { box-shadow: inset 0 0 0 2px var(--mint); background: rgba(107,227,197,.1); }
-button.card .price { font-size: 12px; color: var(--mute); }
-button.card.locked .price { color: var(--gold); }
-button.card.locked canvas, button.card.locked .swatch { opacity: .55; }
-button.card.on .price { color: var(--mint); }
-button.card canvas { width: 56px; height: 56px; }
-.swatch { width: 52px; height: 52px; margin: 2px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; color: #fff; }
-
-.codex { width: 100%; display: grid; gap: 8px; text-align: left; }
-.crow { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; background: rgba(238,240,255,.06); border-radius: 14px; padding: 10px 12px; }
-.crow .ci { font-size: 28px; text-align: center; }
-.crow b { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
-.crow small { display: block; color: var(--gold); font-size: 12px; }
-.crow p { font-size: 13px; color: var(--mute); line-height: 1.45; margin: 2px 0 0; }
-.crow.unk { opacity: .55; }
-.crow.unk small { color: var(--mute); }
-@media (prefers-reduced-motion: reduce) { button, .toast, .discover { transition: none; } }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
 </style>
-</head>
-<body>
+
 <div class="stage" id="stage">
   <canvas id="game" aria-label="궤도 점프 게임 화면"></canvas>
   <div class="hud">
     <div>
-      <div class="label">점수</div>
+      <div class="label">점프</div>
       <div class="score" id="score">0</div>
       <div class="stars-count" id="starsCount">★ 0</div>
-      <div class="combo" id="combo"></div>
-      <div class="ptag" id="ptag"></div>
     </div>
-    <div class="best">
-      <span class="label">최고 기록</span><b id="best">0</b>
-      <button class="mute" id="muteBtn" type="button" aria-label="소리·진동 켜고 끄기">🔊</button>
-    </div>
+    <div class="best"><span class="label">최고 기록</span><b id="best">0</b></div>
   </div>
 
   <div class="overlay" id="startOverlay">
     <div class="panel">
       <h1>궤도 점프</h1>
-      <p>알맞은 순간에 탭해서 궤도를 벗어나<br>다음 행성의 중력권에 들어가세요.</p>
+      <p>행성 궤도를 도는 탐사선을 조종합니다.<br>알맞은 순간에 탭해서 궤도를 벗어나<br>다음 행성의 중력권에 들어가세요.</p>
       <div class="legend">
-        <div><span style="background:var(--mint)"></span>행성 한가운데를 노리면 퍼펙트 콤보</div>
-        <div><span style="background:var(--gold)"></span>행성마다 머물 수 있는 시간이 달라요</div>
-        <div><span style="background:var(--violet)"></span>멀리 갈수록 이상한 행성이 나와요</div>
-        <div><span style="background:var(--coral)"></span>소행성 · 레이저 · 블랙홀 조심</div>
+        <div><span style="background:var(--mint)"></span>점선 안에 들어가면 붙잡혀요</div>
+        <div><span style="background:var(--gold)"></span>별을 먹으면 +2점</div>
+        <div><span style="background:var(--coral)"></span>소행성에 부딪히면 끝</div>
       </div>
-      <div class="missions" id="missions"></div>
-      <div class="wallet" id="wallet1">보유 ★ 0</div>
       <button id="startBtn" type="button">출발</button>
-      <div class="btn-row">
-        <button class="ghost" id="shopBtn1" type="button">상점</button>
-        <button class="ghost" id="codexBtn1" type="button">행성 도감</button>
-      </div>
       <div class="hint">탭 · 클릭 · 스페이스바</div>
     </div>
   </div>
@@ -191,59 +117,24 @@ button.card canvas { width: 56px; height: 56px; }
     <div class="panel">
       <h2 id="overTitle">교신 두절</h2>
       <div class="big" id="finalScore">0</div>
-      <p id="overMsg"></p>
-      <div class="wallet" id="earned"></div>
-      <div class="missions" id="overMissions"></div>
-      <div class="hint" id="wallet3"></div>
+      <p id="overMsg">점</p>
       <button id="retryBtn" type="button">다시 발사</button>
-      <div class="btn-row">
-        <button class="ghost" id="shopBtn2" type="button">상점</button>
-        <button class="ghost" id="codexBtn2" type="button">행성 도감</button>
-      </div>
       <div class="hint">스페이스바로 바로 재시작</div>
     </div>
   </div>
-
-  <div class="overlay" id="shopOverlay" hidden>
-    <div class="panel shop-panel">
-      <div class="shop-head"><h2>상점</h2><div class="wallet" id="wallet2">★ 0</div></div>
-      <div class="sec">탐사선</div>
-      <div class="shop-grid" id="skinGrid"></div>
-      <div class="sec">꼬리 효과</div>
-      <div class="shop-grid" id="trailGrid"></div>
-      <button id="shopBack" type="button">돌아가기</button>
-    </div>
-  </div>
-
-  <div class="overlay" id="codexOverlay" hidden>
-    <div class="panel shop-panel">
-      <div class="shop-head"><h2 style="color:var(--mint)">행성 도감</h2><div class="wallet" id="codexCount"></div></div>
-      <div class="codex" id="codexList"></div>
-      <button id="codexBack" type="button">돌아가기</button>
-    </div>
-  </div>
-
-  <div class="discover" id="discover">
-    <div class="dc-top">새 행성 발견!</div>
-    <div class="dc-ic" id="dcIc"></div>
-    <div class="dc-name" id="dcName"></div>
-    <div class="dc-time" id="dcTime"></div>
-    <div class="dc-desc" id="dcDesc"></div>
-  </div>
-  <div class="toast" id="toast"></div>
 </div>
 
 <script>
 (() => {
-  const $ = id => document.getElementById(id);
-  const cvs = $('game');
+  const cvs = document.getElementById('game');
   const ctx = cvs.getContext('2d');
-  const stage = $('stage');
+  const stage = document.getElementById('stage');
+  const $ = id => document.getElementById(id);
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const TAU = Math.PI * 2;
 
-  const W = 400;
+  const W = 400;           // world width in units
   let H = 700, S = 1, dpr = 1;
+
   function resize() {
     const r = stage.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -255,273 +146,52 @@ button.card canvas { width: 56px; height: 56px; }
   addEventListener('resize', resize);
   resize();
 
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const pick = arr => arr[(Math.random() * arr.length) | 0];
-  const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
-
-  // ---------- save ----------
-  const SAVE_KEY = 'orbit-hop-save';
-  let save = { bank: 0, skins: ['arrow'], trails: ['basic'], skin: 'arrow', trail: 'basic', muted: false, missions: null, found: ['normal'] };
-  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s) save = Object.assign(save, s); } catch (e) {}
-  if (!Array.isArray(save.found)) save.found = ['normal'];
-  function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
   let best = 0;
   try { best = +localStorage.getItem('orbit-hop-best') || 0; } catch (e) {}
   $('best').textContent = best;
 
-  // ---------- planet types ----------
-  // T = seconds you may stay, u = planets generated before it can appear, out = what happens at timeout
-  const PT = {
-    normal:   { n: '보통 행성', i: '🟢', T: 5, u: 0, out: 'fling', d: '시간이 다 되면 아무 방향으로 튕겨 나가요.' },
-    ice:      { n: '얼음 행성', i: '❄️', T: 4, u: 3, out: 'fling', col: ['#e2f6ff', '#4f97c9'], d: '미끄러워서 머물수록 점점 빨리 돌아요.' },
-    gas:      { n: '가스 행성', i: '🌫️', T: 6, u: 4, out: 'fling', col: ['#ddd2ff', '#6a58b8'], d: '천천히 돌지만 궤도가 점점 좁아져요.' },
-    ring:     { n: '고리 행성', i: '🪐', T: Infinity, u: 4, w: .35, out: 'fling', col: ['#c4f7e9', '#2f8576'], d: '시간 제한 없는 안전지대. 숨 고르고 가세요.' },
-    lava:     { n: '용암 행성', i: '🔥', T: 2, u: 6, out: 'die', why: '불타버림', col: ['#ff7a3c', '#7a1406'], d: '2초 안에 안 떠나면 타버려요.' },
-    gem:      { n: '보석 행성', i: '💎', T: 3, u: 6, out: 'die', why: '욕심쟁이 최후', col: ['#7cffd9', '#0f6a5c'], d: '머무는 동안 별이 쌓여요. 욕심내다 시간 넘기면 끝.' },
-    gold:     { n: '황금 행성', i: '⭐', T: 3, u: 6, w: .12, out: 'fling', col: ['#ffe27a', '#b07800'], d: '아주 드물어요. 착지하면 별 +10개!' },
-    move:     { n: '떠돌이 행성', i: '↔️', T: 5, u: 8, out: 'fling', d: '좌우로 왔다 갔다 움직여요.' },
-    electric: { n: '전기 행성', i: '⚡', T: 4, u: 9, out: 'fling', col: ['#fff36b', '#9a7f00'], d: '1초마다 도는 방향이 휙 바뀌어요.' },
-    reverse:  { n: '역회전 행성', i: '🔄', T: 4, u: 10, out: 'fling', col: ['#6bd5ff', '#1d5f8a'], d: '들어온 방향과 반대로 돌아요.' },
-    slime:    { n: '슬라임 행성', i: '🟩', T: 6, u: 11, out: 'fling', col: ['#9cff6b', '#2f7a14'], d: '끈적해서 착지 후 0.6초 동안 발사가 안 돼요.' },
-    volcano:  { n: '화산 행성', i: '🌋', T: 3, u: 13, out: 'die', why: '화산 폭발', col: ['#b0603a', '#3b1a0e'], d: '착지하면 +2점. 대신 3초 뒤 폭발해요.' },
-    mirror:   { n: '거울 행성', i: '🪞', T: 4, u: 14, out: 'fling', col: ['#eef2ff', '#7f88b0'], d: '발사하면 좌우가 뒤집힌 방향으로 날아가요.' },
-    moon:     { n: '위성 행성', i: '🌙', T: 5, u: 15, out: 'fling', d: '작은 달이 같은 궤도를 돌아요. 부딪히면 끝.' },
-    balloon:  { n: '풍선 행성', i: '🎈', T: 5, u: 17, out: 'pop', col: ['#ff9ed1', '#c2185b'], d: '점점 부풀다가 펑! 터지면서 튕겨 나가요.' },
-    magnet:   { n: '자석 행성', i: '🧲', T: 5, u: 18, out: 'fling', col: ['#ff6b6b', '#5a1a1a'], d: '근처 별과 소행성을 궤도로 끌어당겨요.' },
-    cannon:   { n: '대포 행성', i: '💥', T: 2, u: 19, out: 'fire', col: ['#c0c8de', '#454b62'], d: '2배 속도로 바로 위 행성을 건너뛰어요. 2초 뒤 자동 발사!' },
-    ghost:    { n: '유령 행성', i: '👻', T: 4, u: 21, out: 'fling', col: ['#eef4ff', '#8aa0c8'], d: '안 보일 때 들어가면 그냥 통과해 버려요.' },
-    eye:      { n: '눈알 행성', i: '👁️', T: 4, u: 22, out: 'fling', col: ['#ffffff', '#c3c3d8'], d: '탐사선을 노려보다가 레이저를 쏴요.' },
-    gravity:  { n: '중력 행성', i: '🕳️', T: 5, u: 23, out: 'die', why: '행성에 추락', col: ['#4a3580', '#0e0820'], d: '궤도가 나선처럼 안으로 빨려 들어가요.' },
-    warp:     { n: '워프 행성', i: '🌀', T: 3, u: 26, out: 'fling', col: ['#3a2a8e', '#0b0b20'], d: '닿는 순간 두 칸 위 행성으로 순간이동!' },
-    split:    { n: '분열 행성', i: '🧩', T: 3, u: 27, out: 'fling', col: ['#ffb36b', '#8a4a12'], d: '착지하면 둘로 쪼개져요. 조각에도 착지할 수 있어요.' },
-    random:   { n: '랜덤 행성', i: '🎲', T: 4, u: 29, out: 'fling', d: '착지하는 순간 아무 행성으로 변신해요.' },
-    shard:    { n: '행성 조각', i: '🪨', T: 4, u: 999, out: 'fling', hide: true, d: '분열 행성에서 떨어져 나온 조각.' }
-  };
-  const CODEX_KEYS = Object.keys(PT).filter(k => !PT[k].hide);
-
-  // ---------- shop data ----------
-  const SKINS = [
-    { id: 'arrow', name: '기본선', price: 0, glow: '#6be3c5' },
-    { id: 'rocket', name: '로켓', price: 30, glow: '#ff8a6b' },
-    { id: 'ufo', name: 'UFO', price: 60, glow: '#9d8bff', norot: true },
-    { id: 'cat', name: '우주냥', price: 100, glow: '#ffd36b', norot: true },
-    { id: 'paper', name: '종이비행기', price: 150, glow: '#7cc3ff' },
-    { id: 'comet', name: '혜성', price: 220, glow: '#ffd36b' }
-  ];
-  const TRAILS = [
-    { id: 'basic', name: '기본', price: 0, bg: 'radial-gradient(circle,#eef0ff 0 18%,#6be3c5 19% 42%,rgba(238,240,255,.06) 43%)' },
-    { id: 'rainbow', name: '무지개', price: 40, bg: 'conic-gradient(#ff8a6b,#ffd36b,#6be3c5,#7cc3ff,#9d8bff,#ff9ed1,#ff8a6b)' },
-    { id: 'fire', name: '불꽃', price: 80, bg: 'radial-gradient(circle,#fff4c9 0 14%,#ffd36b 15% 34%,#ff5a3c 35% 58%,rgba(238,240,255,.06) 59%)' },
-    { id: 'heart', name: '하트', price: 120, bg: 'radial-gradient(circle,#ff9ed1,#a8467c)', label: '♥' },
-    { id: 'dust', name: '별가루', price: 160, bg: 'radial-gradient(circle at 30% 30%,#ffd36b 0 8%,transparent 9%),radial-gradient(circle at 70% 55%,#fff4c9 0 7%,transparent 8%),radial-gradient(circle at 42% 75%,#ffd36b 0 6%,transparent 7%),rgba(238,240,255,.08)' }
-  ];
-  if (!save.skins.includes(save.skin)) save.skin = 'arrow';
-  if (!save.trails.includes(save.trail)) save.trail = 'basic';
-
-  // ---------- audio & vibration ----------
-  let ac = null, master = null, noiseBuf = null;
-  function au() {
-    if (!ac) {
-      try {
-        ac = new (window.AudioContext || window.webkitAudioContext)();
-        master = ac.createGain(); master.gain.value = .7; master.connect(ac.destination);
-      } catch (e) { ac = null; }
-    }
-    if (ac && ac.state === 'suspended') ac.resume().catch(() => {});
-  }
-  function tone(f, dur, type = 'sine', vol = .12, slide = 1, delay = 0) {
-    if (save.muted || !ac) return;
-    const t = ac.currentTime + delay;
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, t);
-    if (slide !== 1) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
-    g.gain.setValueAtTime(.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + .01);
-    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.connect(g); g.connect(master);
-    o.start(t); o.stop(t + dur + .05);
-  }
-  function noise(dur, vol = .2, freq = 1200) {
-    if (save.muted || !ac) return;
-    if (!noiseBuf) {
-      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
-      const d = noiseBuf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    }
-    const t = ac.currentTime;
-    const s = ac.createBufferSource(); s.buffer = noiseBuf;
-    const f = ac.createBiquadFilter(); f.type = 'lowpass';
-    f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(80, t + dur);
-    const g = ac.createGain();
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(master);
-    s.start(t); s.stop(t + dur + .05);
-  }
-  const vib = p => { if (save.muted || !navigator.vibrate) return; try { navigator.vibrate(p); } catch (e) {} };
-  const sfx = {
-    jump() { tone(380, .14, 'triangle', .12, 2); vib(8); },
-    land() { tone(200, .14, 'sine', .18, .55); vib(12); },
-    perfect(c) { const k = 1 + Math.min(c, 8) * .07; tone(660 * k, .1, 'triangle', .11); tone(990 * k, .24, 'triangle', .11, 1, .07); vib([12, 30, 12]); },
-    star() { tone(1320, .07, 'square', .04); tone(1760, .14, 'square', .04, 1, .05); vib(6); },
-    item() { [523, 659, 784, 1047].forEach((f, i) => tone(f, .12, 'triangle', .09, 1, i * .05)); vib(20); },
-    shield() { noise(.25, .25, 2400); tone(320, .3, 'sawtooth', .07, .4); vib(50); },
-    crash() { noise(.6, .35, 1500); tone(140, .55, 'sawtooth', .12, .3); vib([80, 40, 120]); },
-    mission() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .2, 'triangle', .08, 1, i * .07)); vib([20, 40, 20]); },
-    near() { tone(480, .2, 'sine', .09, 1.7); vib(10); },
-    lost() { tone(440, .7, 'sine', .1, .3); vib(60); },
-    click() { tone(700, .05, 'square', .04); },
-    buy() { [784, 988, 1319].forEach((f, i) => tone(f, .13, 'triangle', .09, 1, i * .06)); vib(25); },
-    deny() { tone(180, .15, 'square', .06, .8); vib(30); },
-    tick(hi) { tone(hi ? 1400 : 1000, .04, 'square', .035); },
-    fling() { tone(300, .25, 'sawtooth', .07, 2.5); vib(25); },
-    zap() { noise(.1, .12, 4000); tone(1200, .08, 'square', .04, .5); vib(10); },
-    warp() { tone(200, .4, 'sine', .12, 6); tone(1200, .4, 'triangle', .05, .2, .05); vib([10, 20, 10, 20, 30]); },
-    pop() { noise(.18, .35, 3000); tone(600, .12, 'square', .06, .3); vib(40); },
-    splat() { tone(140, .2, 'sine', .15, .5); noise(.12, .1, 600); vib(30); },
-    boom() { noise(.35, .3, 900); tone(90, .3, 'sine', .2, .5); vib(60); },
-    charge() { tone(300, .65, 'sawtooth', .04, 3); },
-    discover() { [659, 880, 1175, 1568].forEach((f, i) => tone(f, .25, 'sine', .09, 1, i * .09)); vib([15, 30, 15, 30, 40]); },
-    gold() { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, .18, 'triangle', .08, 1, i * .05)); vib([20, 20, 20, 20, 60]); }
-  };
-  function updateMuteBtn() { $('muteBtn').textContent = save.muted ? '🔇' : '🔊'; }
-  updateMuteBtn();
-
-  // ---------- missions ----------
-  const MP = {
-    stars:  { ns: [4, 6, 8],    txt: n => `한 판에 별 ${n}개 먹기`, rw: n => n * 2 },
-    combo:  { ns: [2, 3, 4],    txt: n => `퍼펙트 ${n}연속`, rw: n => n * 4 },
-    hops:   { ns: [10, 15, 25], txt: n => `한 판에 행성 ${n}개`, rw: n => Math.round(n * .8) },
-    kinds:  { ns: [4, 6, 8],    txt: n => `한 판에 다른 행성 ${n}종 착지`, rw: n => n * 3 },
-    nearBH: { ns: [1, 2],       txt: n => `블랙홀 옆 아슬아슬 통과 ${n}번`, rw: n => n * 8 },
-    items:  { ns: [1, 2, 3],    txt: n => `아이템 ${n}개 먹기`, rw: n => n * 4 },
-    ice:    { ns: [2, 3],       txt: n => `얼음 행성 ${n}개 착지`, rw: n => n * 4 },
-    laser:  { ns: [1, 2, 3],    txt: n => `레이저 게이트 ${n}번 통과`, rw: n => n * 5 },
-    score:  { ns: [20, 35, 50], txt: n => `한 판에 ${n}점`, rw: n => Math.round(n / 3) }
-  };
-  function newMission(exclude) {
-    const keys = Object.keys(MP).filter(k => !exclude.includes(k));
-    const k = pick(keys);
-    return { k, n: pick(MP[k].ns) };
-  }
-  if (!Array.isArray(save.missions) || save.missions.length !== 3 || save.missions.some(m => !MP[m.k])) {
-    save.missions = [];
-    for (let i = 0; i < 3; i++) save.missions.push(newMission(save.missions.map(m => m.k)));
-    persist();
-  }
-  function missionLine(m, status) {
-    const d = MP[m.k];
-    const done = status === 'done';
-    const right = done ? `✓ ★${d.rw(m.n)}` : (status ? status + ' · ' : '') + `★${d.rw(m.n)}`;
-    return `<div class="mission ${done ? 'done' : ''}"><span>${d.txt(m.n)}</span><span class="rw">${right}</span></div>`;
-  }
-
-  // ---------- game state ----------
   const PALETTE = [
     ['#ff8a6b', '#b8432f'], ['#6be3c5', '#24806e'], ['#ffd36b', '#b07c1a'],
-    ['#9d8bff', '#4d3db0'], ['#ff9ed1', '#a8467c']
+    ['#9d8bff', '#4d3db0'], ['#7cc3ff', '#2a6aa8'], ['#ff9ed1', '#a8467c']
   ];
-  const ITEM = {
-    shield: { c: '#7cc3ff', ic: '🛡️', name: '방어막!' },
-    magnet: { c: '#ff9ed1', ic: '🧲', name: '자석!' },
-    slow:   { c: '#9d8bff', ic: '⏳', name: '슬로모션!' },
-    double: { c: '#ffd36b', ic: '×2', name: '점수 2배!' }
-  };
-  const DUR = { magnet: 8, slow: 5, double: 10 };
 
-  let state = 'menu';
-  let planets, rocks, stars, items, bhs, lasers, parts, texts, player, camY;
-  let score, hops, starCount, spd, deathT = 0, shake = 0, flash = 0, combo;
-  let shield, magT, slowT, dblT, invuln, run, runKinds, runBonus, runDone, prevY;
-  let wt = 0, clock = 0;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  const bg = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: Math.random() * 1200, z: rand(.15, 1), tw: Math.random() * 6.28 }));
+  let state = 'menu';   // menu | play | dying | over
+  let planets, rocks, stars, parts, player, camY, score, hops, starCount, spd, deathT, shake, flash;
 
-  function initType(p) {
-    const d = PT[p.type];
-    p.T = d.T;
-    if (d.col) p.col = d.col;
-    if (p.type === 'ring') p.ring = true;
-    if (p.type === 'move' && !p.amp) {
-      p.amp = rand(35, 55);
-      p.bx = clamp(p.bx, 45 + p.amp, W - 45 - p.amp);
-      p.x = p.bx; p.ms = rand(.6, 1.1); p.ph2 = rand(0, 6.28);
-    }
-    if (p.type === 'moon') { p.ma = rand(0, TAU); p.mw = pick([-1, 1]) * rand(.9, 1.3); p.moonDead = false; }
-    if (p.type === 'eye') { p.es = 'idle'; p.et = 0; }
-  }
+  const bg = Array.from({ length: 140 }, () => ({
+    x: Math.random() * W, y: Math.random() * 1200, z: rand(.15, 1), tw: Math.random() * 6.28
+  }));
 
-  function makePlanet(x, y, type = 'normal') {
-    const r = type === 'gold' ? rand(14, 20) : rand(16, 30);
-    const p = {
-      x, y, bx: x, r, band: r + rand(40, 52), type,
-      col: pick(PALETTE),
-      ring: Math.random() < .3 && !['balloon', 'eye', 'ghost', 'random', 'gold'].includes(type),
-      ringTilt: rand(-.6, .6), spin: rand(-1, 1), visited: false, pulse: 0,
-      amp: 0, drift: 0, ph: rand(0, 6.28), dead: false
+  function makePlanet(x, y) {
+    const r = rand(16, 30);
+    return {
+      x, y, r, band: r + rand(40, 52),
+      col: PALETTE[(Math.random() * PALETTE.length) | 0],
+      ring: Math.random() < .35, ringTilt: rand(-.6, .6),
+      spin: rand(-1, 1), visited: false, pulse: 0
     };
-    initType(p);
-    return p;
-  }
-
-  function pickType(n) {
-    const pool = [];
-    let tot = 0;
-    for (const k of Object.keys(PT)) {
-      const d = PT[k];
-      if (d.hide || n < d.u) continue;
-      let w = d.w || 1;
-      if (k === 'normal') w = Math.max(.8, 12 - n * .45);
-      pool.push([k, w]); tot += w;
-    }
-    let r = Math.random() * tot;
-    for (const [k, w] of pool) { r -= w; if (r <= 0) return k; }
-    return 'normal';
-  }
-
-  function bhOk(x, y, a, b) {
-    for (const q of [a, b]) {
-      const hx = Math.max(0, Math.abs(x - q.bx) - q.amp);
-      if (Math.hypot(hx, y - q.y) < q.band + 30) return false;
-    }
-    return x > 25 && x < W - 25;
   }
 
   function genNext() {
     const last = planets[planets.length - 1];
-    const n = planets.length;
     const gap = rand(175, 225) + Math.min(hops * 2.5, 70);
-    let x = last.bx + rand(-170, 170);
-    if (Math.abs(x - last.bx) < 50) x += (x < W / 2 ? 1 : -1) * 60;
+    let x = last.x + rand(-170, 170);
+    if (Math.abs(x - last.x) < 50) x += (x < W / 2 ? 1 : -1) * 60;
     x = clamp(x, 70, W - 70);
-    const p = makePlanet(x, last.y - gap, pickType(n));
+    const p = makePlanet(x, last.y - gap);
     planets.push(p);
-    const mx = (last.bx + p.bx) / 2, my = (last.y + p.y) / 2;
 
+    // star between planets
     if (Math.random() < .55) {
       const t = rand(.35, .65);
-      stars.push({ x: last.bx + (p.bx - last.bx) * t + rand(-30, 30), y: last.y + (p.y - last.y) * t, got: false, t: 0 });
+      stars.push({ x: last.x + (p.x - last.x) * t + rand(-30, 30), y: last.y + (p.y - last.y) * t, got: false, t: 0 });
     }
-    if (n > 2 && Math.random() < .17) {
-      items.push({ x: clamp(mx + rand(-60, 60), 30, W - 30), y: my + rand(-25, 25), type: pick(Object.keys(ITEM)), t: 0, got: false });
-    }
-
-    let special = false;
-    const calm = last.type === 'balloon' || p.type === 'balloon' || last.type === 'split' || p.type === 'split';
-    const hz = Math.random();
-    if (!calm && n > 8 && hz < .2) {
-      const side = mx < W / 2 ? 1 : -1;
-      for (const s of [side, -side]) {
-        const bx = mx + s * rand(80, 115);
-        if (bhOk(bx, my, last, p)) { bhs.push({ x: bx, y: my, r: 12, near: false, counted: false, dead: false }); special = true; break; }
-      }
-    } else if (!calm && n > 10 && hz < .38) {
-      lasers.push({ y: my, ph: rand(0, 3), P: rand(2.2, 3), passed: false });
-      special = true;
-    }
-
-    const chance = Math.min(.1 + n * .022, .5) * (special ? .4 : 1);
-    if (n > 4 && Math.random() < chance) {
+    // asteroid crossing the gap
+    const chance = Math.min(.1 + planets.length * .025, .6);
+    if (planets.length > 4 && Math.random() < chance) {
       const dir = Math.random() < .5 ? 1 : -1;
       rocks.push({
         x: rand(0, W), y: last.y + (p.y - last.y) * rand(.3, .7),
@@ -532,159 +202,39 @@ button.card canvas { width: 56px; height: 56px; }
   }
 
   function reset() {
-    planets = []; rocks = []; stars = []; items = []; bhs = []; lasers = []; parts = []; texts = [];
-    score = 0; hops = 0; starCount = 0; spd = 230; shake = 0; flash = 0; combo = 0;
-    shield = false; magT = 0; slowT = 0; dblT = 0; invuln = 0; runBonus = 0; runDone = new Set();
-    runKinds = new Set(['normal']);
-    run = { stars: 0, combo: 0, hops: 0, kinds: 1, nearBH: 0, items: 0, ice: 0, laser: 0, score: 0 };
-    const first = makePlanet(W / 2, H * .68, 'normal');
+    planets = []; rocks = []; stars = []; parts = [];
+    score = 0; hops = 0; starCount = 0; spd = 230; shake = 0; flash = 0;
+    const first = makePlanet(W / 2, H * .68);
     first.visited = true;
     planets.push(first);
     while (planets[planets.length - 1].y > -H) genNext();
-    player = { mode: 'orbit', planet: first, a: -Math.PI / 2, dir: 1, R: first.band - 12, x: 0, y: 0, vx: 0, vy: 0,
-      from: null, flyT: 0, stay: 0, lock: 0, skip: null, cannon: false, tick: -1 };
-    player.x = first.x; player.y = first.y - player.R; prevY = player.y;
+    player = { mode: 'orbit', planet: first, a: -Math.PI / 2, dir: 1, R: first.band - 12, x: 0, y: 0, vx: 0, vy: 0, from: null, flyT: 0 };
     camY = first.y - H * .62;
     updateHud();
-    setTag(first);
   }
 
   function updateHud() {
     $('score').textContent = score;
     $('starsCount').textContent = '★ ' + starCount;
-    $('combo').textContent = combo >= 2 ? `퍼펙트 콤보 x${combo}` : '';
-  }
-  function setTag(p) {
-    $('ptag').textContent = p && p.type !== 'normal' && p.type !== 'shard' ? `${PT[p.type].i} ${PT[p.type].n}` : '';
-  }
-  function updateWallets() {
-    $('wallet1').textContent = '보유 ★ ' + save.bank;
-    $('wallet2').textContent = '★ ' + save.bank;
-    $('wallet3').textContent = '보유 ★ ' + save.bank;
-  }
-
-  let toastTimer = 0;
-  function toast(msg) {
-    const el = $('toast');
-    el.textContent = msg; el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
-  }
-  let discTimer = 0;
-  function discover(type) {
-    const d = PT[type];
-    if (d.hide || save.found.includes(type)) return;
-    save.found.push(type); persist();
-    $('dcIc').textContent = d.i;
-    $('dcName').textContent = d.n;
-    $('dcTime').textContent = isFinite(d.T) ? `머물 수 있는 시간 ${d.T}초` : '시간 제한 없음';
-    $('dcDesc').textContent = d.d;
-    $('discover').classList.add('show');
-    clearTimeout(discTimer);
-    discTimer = setTimeout(() => $('discover').classList.remove('show'), 2600);
-    sfx.discover();
   }
 
   function burst(x, y, n, colors, sp = 120, life = .8) {
     for (let i = 0; i < n; i++) {
-      const a = Math.random() * TAU, v = rand(.2, 1) * sp;
+      const a = Math.random() * 6.283, v = rand(.2, 1) * sp;
       parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, c: colors[i % colors.length], s: rand(1.5, 3.5) });
     }
   }
-  function addText(x, y, s, c, big = false) { texts.push({ x, y, s, c, big, life: 1, max: 1 }); }
 
-  function trail(fly) {
-    const x = player.x, y = player.y, tr = save.trail;
-    if (!fly && Math.random() < .5) return;
-    if (tr === 'rainbow') {
-      parts.push({ x, y, vx: rand(-6, 6), vy: rand(-6, 6), life: fly ? .7 : .4, max: fly ? .7 : .4, c: `hsl(${(clock * 260) % 360},95%,70%)`, s: fly ? 2.8 : 1.9 });
-    } else if (tr === 'fire') {
-      const l = rand(.35, .6);
-      parts.push({ x, y, vx: rand(-18, 18), vy: rand(-18, 18), life: l, max: l, c: pick(['#ff5a3c', '#ff8a6b', '#ffd36b', '#fff4c9']), s: rand(2, 3.8) });
-    } else if (tr === 'heart') {
-      if (Math.random() < .5) parts.push({ x, y, vx: rand(-10, 10), vy: rand(-20, 0), life: .8, max: .8, c: pick(['#ff9ed1', '#ff6fae']), s: rand(6, 9), shape: 'heart' });
-    } else if (tr === 'dust') {
-      parts.push({ x: x + rand(-4, 4), y: y + rand(-4, 4), vx: rand(-8, 8), vy: rand(-8, 8), life: .9, max: .9, c: pick(['#ffd36b', '#fff4c9']), s: rand(2.5, 4.5), shape: 'spark' });
-    } else {
-      if (fly) parts.push({ x, y, vx: rand(-10, 10), vy: rand(-10, 10), life: .6, max: .6, c: '#eef0ff', s: 2.2 });
-      else parts.push({ x, y, vx: 0, vy: 0, life: .35, max: .35, c: '#6be3c5', s: 1.6 });
-    }
-  }
-
-  // ---------- launching ----------
-  function launchVec() {
-    const pl = player.planet;
-    let vx = -Math.sin(player.a) * player.dir, vy = Math.cos(player.a) * player.dir;
-    if (pl && pl.type === 'mirror') vx = -vx;
-    return [vx, vy, pl && pl.type === 'cannon' ? 2 : 1];
-  }
-  function doLaunch() {
-    const pl = player.planet;
-    const [vx, vy, m] = launchVec();
-    player.vx = vx * spd * m;
-    player.vy = vy * spd * m;
-    player.cannon = m > 1;
-    player.skip = m > 1 ? planets[planets.indexOf(pl) + 1] || null : null;
-    if (pl.type === 'eye') pl.es = 'idle';
-    player.from = pl;
+  function launch() {
+    if (state !== 'play' || player.mode !== 'orbit') return;
+    const { a, dir } = player;
+    player.vx = -Math.sin(a) * dir * spd;
+    player.vy = Math.cos(a) * dir * spd;
+    player.from = player.planet;
     player.planet = null;
     player.mode = 'fly';
     player.flyT = 0;
     burst(player.x, player.y, 8, ['#eef0ff', '#6be3c5'], 60, .4);
-    if (m > 1) { sfx.boom(); shake = reduceMotion ? 0 : 4; burst(player.x, player.y, 18, ['#c0c8de', '#ffd36b'], 140, .5); }
-    else sfx.jump();
-    setTag(null);
-  }
-  function launch() {
-    if (state !== 'play' || player.mode !== 'orbit') return;
-    if (player.lock > 0) { sfx.deny(); addText(player.x, player.y - 16, '끈적…', '#9cff6b'); return; }
-    doLaunch();
-  }
-  function fling() {
-    const pl = player.planet;
-    player.a = rand(0, TAU);
-    player.x = pl.x + Math.cos(player.a) * player.R;
-    player.y = pl.y + Math.sin(player.a) * player.R;
-    addText(player.x, player.y - 16, '튕겨나감!', '#ffd36b', true);
-    sfx.fling();
-    doLaunch();
-  }
-  function timeoutPlanet(pl) {
-    const d = PT[pl.type];
-    if (d.out === 'die') {
-      if (pl.type === 'volcano') burst(pl.x, pl.y, 50, ['#ff8a6b', '#ffd36b', '#7a1406'], 220, 1);
-      if (pl.type === 'lava') burst(player.x, player.y, 20, ['#ff7a3c', '#ffd36b'], 90, .6);
-      if (!hit(d.why, pl, 'timeout')) return;
-      fling();
-    } else if (d.out === 'pop') {
-      pl.dead = true;
-      burst(pl.x, pl.y, 40, ['#ff9ed1', '#fff', '#c2185b'], 200, .8);
-      addText(pl.x, pl.y, '펑!', '#ff9ed1', true);
-      sfx.pop();
-      shake = reduceMotion ? 0 : 5;
-      doLaunch();
-    } else if (d.out === 'fire') {
-      addText(player.x, player.y - 16, '자동 발사!', '#c0c8de', true);
-      doLaunch();
-    } else fling();
-  }
-
-  function hit(reason, obj, kind) {
-    if (state !== 'play') return false;
-    if (invuln > 0) return true;
-    if (shield) {
-      shield = false; invuln = 1.2;
-      shake = reduceMotion ? 0 : 5;
-      burst(player.x, player.y, 26, ['#7cc3ff', '#eef0ff'], 160, .7);
-      addText(player.x, player.y - 20, '방어막 파괴!', '#7cc3ff');
-      sfx.shield();
-      if (kind === 'rock') rocks.splice(rocks.indexOf(obj), 1);
-      if (kind === 'bh') { obj.dead = true; burst(obj.x, obj.y, 30, ['#9d8bff', '#ff9ed1'], 140, .8); }
-      if (kind === 'moon') obj.moonDead = true;
-      return true;
-    }
-    die(reason);
-    return false;
   }
 
   function die(reason) {
@@ -694,749 +244,191 @@ button.card canvas { width: 56px; height: 56px; }
     shake = reduceMotion ? 0 : 10;
     burst(player.x, player.y, 40, ['#ff8a6b', '#ffd36b', '#eef0ff'], 200, 1.1);
     $('overTitle').textContent = reason;
-    if (reason === '우주 미아') sfx.lost(); else sfx.crash();
-    setTag(null);
   }
 
   function showOver() {
     state = 'over';
-    const earned = starCount + runBonus;
-    save.bank += earned;
     const isBest = score > best;
     if (isBest) {
       best = score;
       try { localStorage.setItem('orbit-hop-best', String(best)); } catch (e) {}
       $('best').textContent = best;
     }
-    let html = '<h3>미션</h3>' + save.missions.map((m, i) =>
-      missionLine(m, runDone.has(i) ? 'done' : `${Math.min(run[m.k], m.n)}/${m.n}`)).join('');
-    if (runDone.size) {
-      const keys = save.missions.map(m => m.k);
-      const fresh = [];
-      for (const i of runDone) { const nm = newMission(keys); keys[i] = nm.k; save.missions[i] = nm; fresh.push(nm); }
-      html += '<h3 style="margin-top:6px">새 미션</h3>' + fresh.map(m => missionLine(m, '')).join('');
-    }
-    persist();
-    $('overMissions').innerHTML = html;
     $('finalScore').textContent = score;
-    $('overMsg').textContent = (isBest ? '새 최고 기록이에요! ' : '') +
-      `행성 ${hops}개 · ${runKinds.size}종 · 최대 콤보 ${run.combo}` + (isBest ? '' : ` · 최고 ${best}점`);
-    $('earned').textContent = `★ +${earned} 획득` + (runBonus ? ` (미션 +${runBonus})` : '');
-    updateWallets();
+    $('overMsg').textContent = isBest
+      ? `새 최고 기록이에요! 행성 ${hops}개 · 별 ${starCount}개`
+      : `행성 ${hops}개 · 별 ${starCount}개 · 최고 ${best}점`;
     $('overOverlay').hidden = false;
     $('retryBtn').focus({ preventScroll: true });
   }
 
   function start() {
-    au();
     reset();
     state = 'play';
-    for (const id of ['startOverlay', 'overOverlay', 'shopOverlay', 'codexOverlay']) $(id).hidden = true;
+    $('startOverlay').hidden = true;
+    $('overOverlay').hidden = true;
+    cvs.focus?.();
   }
-
-  function checkMissions() {
-    run.score = score;
-    save.missions.forEach((m, i) => {
-      if (!runDone.has(i) && run[m.k] >= m.n) {
-        runDone.add(i);
-        const rw = MP[m.k].rw(m.n);
-        runBonus += rw;
-        toast(`미션 완료! ★+${rw}`);
-        sfx.mission();
-      }
-    });
-  }
-
-  // ---------- landing ----------
-  function land(q, bParam, noWarp) {
-    const mul = dblT > 0 ? 2 : 1;
-    player.mode = 'orbit';
-    player.planet = q;
-    player.stay = 0; player.lock = 0; player.tick = -1;
-    q.pulse = 1;
-
-    if (q.type === 'random') {
-      discover('random');
-      runKinds.add('random');
-      const pool = Object.keys(PT).filter(k => !['random', 'warp', 'split', 'shard', 'move', 'normal'].includes(k) && PT[k].u <= Math.max(planets.length, 10));
-      q.type = pick(pool);
-      initType(q);
-      addText(q.x, q.y + q.r + 22, `🎲 → ${PT[q.type].i} ${PT[q.type].n}`, '#eef0ff', true);
-      sfx.warp();
-    }
-
-    if (!q.visited) {
-      q.visited = true;
-      hops++; run.hops = hops;
-      if (q.type === 'ice') run.ice++;
-      runKinds.add(q.type); run.kinds = runKinds.size;
-      const perfect = bParam >= 0 && bParam < q.band * .5;
-      let gain;
-      if (perfect) {
-        combo++; run.combo = Math.max(run.combo, combo);
-        gain = (1 + Math.min(combo, 5)) * mul;
-        addText(q.x, q.y - q.r - 30, (combo > 1 ? `퍼펙트 x${combo}` : '퍼펙트!') + `  +${gain}`, '#6be3c5', true);
-        burst(player.x, player.y, 24, ['#6be3c5', '#eef0ff', '#ffd36b'], 130, .7);
-        sfx.perfect(combo);
-      } else {
-        if (bParam >= 0) combo = 0;
-        gain = mul;
-        addText(q.x, q.y - q.r - 30, `+${gain}`, '#eef0ff');
-        sfx.land();
-      }
-      if (q.type === 'volcano') { gain += 2 * mul; addText(q.x, q.y + q.r + 20, `화산 보너스 +${2 * mul}`, '#ff8a6b'); }
-      if (player.cannon) { gain += 3 * mul; addText(q.x, q.y + q.r + 20, `대포 점프! +${3 * mul}`, '#c0c8de', true); }
-      if (q.type === 'gold') {
-        starCount += 10; run.stars += 10; flash = 1;
-        burst(q.x, q.y, 70, ['#ffd36b', '#fff4c9', '#ff8a6b', '#6be3c5', '#ff9ed1'], 260, 1.3);
-        addText(q.x, q.y + q.r + 22, '황금! ★ +10', '#ffd36b', true);
-        sfx.gold();
-      }
-      score += gain;
-      spd = 230 + Math.min(hops * 4, 130);
-      burst(player.x, player.y, 14, [q.col[0], '#eef0ff'], 90, .6);
-      updateHud();
-    } else sfx.land();
-    player.cannon = false; player.skip = null;
-
-    discover(q.type);
-    setTag(q);
-
-    switch (q.type) {
-      case 'reverse':
-        player.dir *= -1;
-        addText(player.x, player.y - 16, '반대로!', '#6bd5ff');
-        break;
-      case 'slime':
-        player.lock = .6;
-        burst(player.x, player.y, 14, ['#9cff6b', '#2f7a14'], 60, .6);
-        sfx.splat();
-        break;
-      case 'electric': q.flip = 1; break;
-      case 'gem': q.gemT = .5; break;
-      case 'balloon': q.r0 = q.r0 || q.r; q.band0 = q.band0 || q.band; q.st0 = q.st0 || 0; break;
-      case 'gravity': q.R0 = player.R; break;
-      case 'moon': if (!q.moonDead) { q.ma = player.a + Math.PI; q.mw = player.dir * (spd / player.R) * .55; } break;
-      case 'eye': q.es = 'idle'; q.et = 0; break;
-      case 'warp':
-        if (!noWarp) {
-          const i = planets.indexOf(q);
-          while (planets.length < i + 3) genNext();
-          const mid = planets[i + 1], tg = planets[i + 2];
-          mid.visited = true;
-          burst(player.x, player.y, 30, ['#9d8bff', '#6be3c5', '#eef0ff'], 160, .7);
-          addText(q.x, q.y, '워프!', '#9d8bff', true);
-          sfx.warp();
-          player.from = q;
-          player.a = rand(0, TAU);
-          player.dir = pick([-1, 1]);
-          player.R = tg.band - 8;
-          player.x = tg.x + Math.cos(player.a) * player.R;
-          player.y = tg.y + Math.sin(player.a) * player.R;
-          burst(player.x, player.y, 30, ['#9d8bff', '#6be3c5', '#eef0ff'], 160, .7);
-          land(tg, -1, true);
-        }
-        break;
-    }
-  }
-
-  function doSplit(p) {
-    p.splitDone = true;
-    const s = p.bx > W / 2 ? -1 : 1;
-    const q = makePlanet(p.bx, p.y, 'shard');
-    q.r = p.r * .7; q.band = q.r + 36; q.col = p.col; q.ring = false;
-    q.drift = 150 * s;
-    p.r *= .72; p.band = p.r + 36;
-    player.R = Math.min(player.R, p.band - 3);
-    p.drift = -150 * s;
-    planets.splice(planets.indexOf(p) + 1, 0, q);
-    burst(p.x, p.y, 30, [p.col[0], '#eef0ff'], 150, .7);
-    addText(p.x, p.y - p.r - 20, '쪼개짐!', '#ffb36b', true);
-    sfx.pop();
-  }
-
-  const ghostVis = q => .5 + .5 * Math.sin(wt * 1.7 + q.ph);
-  const moonPos = p => [p.x + Math.cos(p.ma) * (p.band - 6), p.y + Math.sin(p.ma) * (p.band - 6)];
 
   // ---------- update ----------
   function update(dt) {
-    const wdt = dt * (state === 'play' && slowT > 0 ? .5 : 1);
-    wt += wdt;
-    for (const p of parts) { p.x += p.vx * wdt; p.y += p.vy * wdt; p.vx *= .97; p.vy *= .97; p.life -= wdt; }
+    // particles always move
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .97; p.vy *= .97; p.life -= dt; }
     parts = parts.filter(p => p.life > 0);
-    for (const t of texts) { t.y -= 28 * dt; t.life -= dt * .9; }
-    texts = texts.filter(t => t.life > 0);
     for (const r of rocks) {
-      r.x += r.vx * wdt; r.rot += r.vr * wdt;
+      r.x += r.vx * dt; r.rot += r.vr * dt;
       if (r.x < -20) r.x += W + 40; else if (r.x > W + 20) r.x -= W + 40;
     }
-    for (const p of planets) {
-      p.pulse = Math.max(0, p.pulse - dt * 1.5);
-      if (p.drift) {
-        p.bx = clamp(p.bx + p.drift * wdt, 40, W - 40);
-        p.drift *= Math.max(0, 1 - 2.5 * wdt);
-        if (Math.abs(p.drift) < 3) p.drift = 0;
-      }
-      p.x = p.type === 'move' ? p.bx + Math.sin(wt * p.ms + p.ph2) * p.amp : p.bx;
-      if (p.type === 'moon' && !p.moonDead) p.ma += p.mw * wdt;
-      if (p.type === 'volcano' && Math.random() < .08) parts.push({ x: p.x + rand(-3, 3), y: p.y - p.r - 4, vx: rand(-8, 8), vy: rand(-40, -20), life: 1, max: 1, c: 'rgba(160,140,170,.6)', s: rand(2, 4) });
-    }
-    for (const s of stars) s.t += wdt;
-    for (const it of items) it.t += wdt;
+    for (const p of planets) { p.pulse = Math.max(0, p.pulse - dt * 1.5); }
+    for (const s of stars) s.t += dt;
     shake = Math.max(0, shake - dt * 30);
     flash = Math.max(0, flash - dt * 2);
 
-    if (state === 'dying') { deathT += dt; if (deathT > .9) showOver(); return; }
+    if (state === 'dying') {
+      deathT += dt;
+      if (deathT > .9) showOver();
+      return;
+    }
     if (state === 'menu') {
+      // idle orbit behind the title screen
       const pl = player.planet;
       player.a += player.dir * (spd * .6 / player.R) * dt;
       player.x = pl.x + Math.cos(player.a) * player.R;
       player.y = pl.y + Math.sin(player.a) * player.R;
-      trail(false);
       return;
     }
     if (state !== 'play') return;
 
-    magT = Math.max(0, magT - dt);
-    slowT = Math.max(0, slowT - dt);
-    dblT = Math.max(0, dblT - dt);
-    invuln = Math.max(0, invuln - dt);
-    const mul = dblT > 0 ? 2 : 1;
-    prevY = player.y;
-
     if (player.mode === 'orbit') {
       const pl = player.planet;
-      player.stay += wdt;
-      if (player.lock > 0) player.lock -= wdt;
-      let k = 1;
-      switch (pl.type) {
-        case 'ice': k = 1.3 + player.stay * .3; break;
-        case 'gas': k = .6; player.R = Math.max(pl.r + 14, player.R - 6 * wdt); break;
-        case 'slime': k = .75; break;
-        case 'electric':
-          pl.flip -= wdt;
-          if (pl.flip <= 0) { pl.flip = 1; player.dir *= -1; burst(player.x, player.y, 10, ['#fff36b', '#fff'], 80, .3); sfx.zap(); }
-          break;
-        case 'gravity':
-          player.R = pl.R0 - (pl.R0 - (pl.r + 6)) * Math.min(1, player.stay / pl.T);
-          k = 1 + player.stay * .15;
-          break;
-        case 'balloon': {
-          const ratio = player.R / pl.band;
-          const g = 1 + player.stay * .09;
-          pl.r = pl.r0 * g; pl.band = pl.band0 * g;
-          player.R = ratio * pl.band;
-          break;
-        }
-        case 'gem':
-          pl.gemT -= wdt;
-          if (pl.gemT <= 0) {
-            pl.gemT = .5; starCount++; run.stars++; score += mul;
-            addText(player.x, player.y - 14, '★', '#7cffd9');
-            burst(player.x, player.y, 5, ['#7cffd9', '#fff'], 50, .4);
-            sfx.star(); updateHud();
-          }
-          break;
-        case 'split':
-          if (!pl.splitDone && player.stay > .6) doSplit(pl);
-          break;
-        case 'eye': {
-          pl.et += wdt;
-          if (pl.es === 'idle' && pl.et > .9) {
-            pl.es = 'charge'; pl.et = 0;
-            pl.la = player.a + player.dir * (spd / player.R) * .7;
-            sfx.charge();
-          } else if (pl.es === 'charge' && pl.et > .7) {
-            pl.es = 'fire'; pl.et = 0;
-            sfx.zap(); shake = reduceMotion ? 0 : 3;
-            if (Math.abs(angDiff(player.a, pl.la)) < .45) { if (!hit('눈알 레이저', pl, 'eye')) return; }
-          } else if (pl.es === 'fire' && pl.et > .25) { pl.es = 'idle'; pl.et = 0; }
-          break;
-        }
-      }
-      player.a += player.dir * (spd * k / player.R) * wdt;
+      player.a += player.dir * (spd / player.R) * dt;
       player.x = pl.x + Math.cos(player.a) * player.R;
       player.y = pl.y + Math.sin(player.a) * player.R;
-      trail(false);
-      if (pl.type === 'ice' && Math.random() < .3) parts.push({ x: player.x, y: player.y, vx: rand(-15, 15), vy: rand(-15, 15), life: .4, max: .4, c: '#e2f6ff', s: 1.5 });
-      if (pl.type === 'lava' && Math.random() < .4) parts.push({ x: player.x, y: player.y, vx: rand(-10, 10), vy: rand(-30, -5), life: .5, max: .5, c: pick(['#ff7a3c', '#ffd36b']), s: 2 });
-
-      if (isFinite(pl.T)) {
-        const rem = pl.T - player.stay;
-        if (rem < 1.5 && rem > 0) {
-          const t = Math.floor(rem * 4);
-          if (t !== player.tick) { player.tick = t; sfx.tick(rem < .6); }
-        }
-        if (rem <= 0) { timeoutPlanet(pl); if (state !== 'play') return; }
-      }
+      if (Math.random() < .5) parts.push({ x: player.x, y: player.y, vx: 0, vy: 0, life: .35, max: .35, c: '#6be3c5', s: 1.6 });
     } else {
-      player.flyT += wdt;
-      for (const b of bhs) {
-        if (b.dead) continue;
-        const dx = b.x - player.x, dy = b.y - player.y, d = Math.hypot(dx, dy);
-        if (d < 170 && d > 1) {
-          const a = 1.1e6 / (d * d + 900);
-          player.vx += dx / d * a * wdt;
-          player.vy += dy / d * a * wdt;
-        }
-      }
-      player.x += player.vx * wdt;
-      player.y += player.vy * wdt;
-      trail(true);
+      player.flyT += dt;
+      player.x += player.vx * dt;
+      player.y += player.vy * dt;
+      parts.push({ x: player.x, y: player.y, vx: rand(-10, 10), vy: rand(-10, 10), life: .6, max: .6, c: '#eef0ff', s: 2.2 });
 
       for (const q of planets) {
-        if (q === player.from || q === player.skip || q.dead) continue;
-        if (q.type === 'ghost' && ghostVis(q) < .35) continue;
+        if (q === player.from) continue;
         const dx = player.x - q.x, dy = player.y - q.y;
         const d = Math.hypot(dx, dy);
         if (d < q.band) {
-          const sp = Math.hypot(player.vx, player.vy) || 1;
           const cross = dx * player.vy - dy * player.vx;
-          const bParam = Math.abs(cross) / sp;
+          player.mode = 'orbit';
+          player.planet = q;
           player.R = Math.max(d, q.r + 14);
           player.a = Math.atan2(dy, dx);
           player.dir = cross > 0 ? 1 : -1;
-          land(q, bParam, false);
+          q.pulse = 1;
+          if (!q.visited) {
+            q.visited = true;
+            hops++; score++;
+            spd = 230 + Math.min(hops * 4, 130);
+            burst(player.x, player.y, 14, [q.col[0], '#eef0ff'], 90, .6);
+            updateHud();
+          }
           break;
         }
       }
       if (player.mode === 'fly') {
-        if (player.x < -12 || player.x > W + 12 || player.y > camY + H + 20 || player.flyT > 3.4) die('우주 미아');
+        if (player.x < -12 || player.x > W + 12 || player.y > camY + H + 20 || player.flyT > 3.2) die('우주 미아');
       }
-    }
-    if (state !== 'play') return;
-
-    // magnet planets pull stars and rocks onto their orbit
-    for (const p of planets) {
-      if (p.type !== 'magnet' || p.dead) continue;
-      for (const s of stars) {
-        if (s.got) continue;
-        const dx = p.x - s.x, dy = p.y - s.y, d = Math.hypot(dx, dy);
-        if (d < 200 && d > p.band - 4) { s.x += dx / d * 70 * wdt; s.y += dy / d * 70 * wdt; }
-      }
-      for (const r of rocks) {
-        const dx = p.x - r.x, dy = p.y - r.y, d = Math.hypot(dx, dy);
-        if (d < 200 && d > p.band - 4) { r.x += dx / d * 45 * wdt; r.y += dy / d * 45 * wdt; }
-      }
-    }
-    // moons
-    for (const p of planets) {
-      if (p.type !== 'moon' || p.moonDead) continue;
-      const [mx, my] = moonPos(p);
-      if (Math.hypot(player.x - mx, player.y - my) < 9) { if (!hit('달과 충돌', p, 'moon')) return; }
     }
 
-    // stars (+magnet item)
     for (const s of stars) {
-      if (s.got) continue;
-      const dx = player.x - s.x, dy = player.y - s.y, d = Math.hypot(dx, dy);
-      if (magT > 0 && d < 150 && d > 1) { const v = 320 * wdt; s.x += dx / d * v; s.y += dy / d * v; }
-      if (d < 16) {
-        s.got = true; starCount++; run.stars++; score += 2 * mul; flash = .6;
+      if (!s.got && Math.hypot(player.x - s.x, player.y - s.y) < 16) {
+        s.got = true; starCount++; score += 2; flash = .6;
         burst(s.x, s.y, 16, ['#ffd36b', '#fff4c9'], 110, .7);
-        addText(s.x, s.y - 12, `★ +${2 * mul}`, '#ffd36b');
-        sfx.star();
         updateHud();
       }
     }
-    for (const it of items) {
-      if (it.got) continue;
-      if (Math.hypot(player.x - it.x, player.y - it.y) < 18) {
-        it.got = true; run.items++;
-        const d = ITEM[it.type];
-        if (it.type === 'shield') shield = true;
-        else if (it.type === 'magnet') magT = DUR.magnet;
-        else if (it.type === 'slow') slowT = DUR.slow;
-        else dblT = DUR.double;
-        burst(it.x, it.y, 20, [d.c, '#eef0ff'], 120, .7);
-        addText(it.x, it.y - 16, d.name, d.c, true);
-        sfx.item();
-      }
-    }
-    items = items.filter(i => !i.got);
-
     for (const r of rocks) {
-      if (Math.hypot(player.x - r.x, player.y - r.y) < r.r + 4) { hit('소행성 충돌', r, 'rock'); break; }
-    }
-    if (state !== 'play') return;
-    for (const b of bhs) {
-      if (b.dead) continue;
-      const d = Math.hypot(player.x - b.x, player.y - b.y);
-      if (d < b.r + 3) { if (!hit('블랙홀에 삼켜짐', b, 'bh')) return; continue; }
-      if (d < 75 && player.mode === 'fly') b.near = true;
-      if (b.near && !b.counted && d > 140) {
-        b.counted = true; run.nearBH++; score += mul;
-        addText(player.x, player.y - 18, `아슬아슬! +${mul}`, '#9d8bff', true);
-        sfx.near(); updateHud();
-      }
-    }
-    for (const L of lasers) {
-      if ((prevY - L.y) * (player.y - L.y) <= 0 && prevY !== player.y) {
-        if (laserOn(L) && invuln <= 0) { if (!hit('레이저에 지짐', L, 'laser')) return; }
-        if (!L.passed) { L.passed = true; run.laser++; }
-      }
+      if (Math.hypot(player.x - r.x, player.y - r.y) < r.r + 4) { die('소행성 충돌'); break; }
     }
 
-    checkMissions();
-
+    // camera
     const focusY = player.mode === 'orbit' ? player.planet.y : player.y;
     const target = focusY - H * .62;
     camY += (target - camY) * Math.min(1, dt * 3);
 
+    // generate & cull
     while (planets[planets.length - 1].y > camY - H * .6) genNext();
     const cut = camY + H + 250;
-    planets = planets.filter(p => (p.y < cut && !p.dead) || p === player.planet);
+    planets = planets.filter(p => p.y < cut || p === player.planet);
     rocks = rocks.filter(r => r.y < cut);
-    stars = stars.filter(s => s.y < cut && !s.got);
-    items = items.filter(i => i.y < cut);
-    bhs = bhs.filter(b => b.y < cut && !b.dead);
-    lasers = lasers.filter(l => l.y < cut);
+    stars = stars.filter(s => s.y < cut && !(s.got && s.t > 99));
   }
-
-  const laserPhase = L => ((wt + L.ph) % L.P) / L.P;
-  const laserOn = L => laserPhase(L) > .55;
 
   // ---------- draw ----------
   function drawPlanet(p, t) {
-    let [c1, c2] = p.col;
-    if (p.type === 'random') { const h = (t * 120) % 360; c1 = `hsl(${h},90%,72%)`; c2 = `hsl(${(h + 140) % 360},70%,35%)`; }
-    const ghostA = p.type === 'ghost' ? .12 + .88 * ghostVis(p) : 1;
-    const current = player && player.planet === p && state === 'play';
-
-    if (p.type === 'move') {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(124,195,255,.22)'; ctx.lineWidth = 2; ctx.setLineDash([2, 6]);
-      ctx.beginPath(); ctx.moveTo(p.bx - p.amp, p.y); ctx.lineTo(p.bx + p.amp, p.y); ctx.stroke();
-      ctx.restore();
-    }
+    const [c1, c2] = p.col;
+    // capture zone
     ctx.save();
-    ctx.globalAlpha = ghostA;
     ctx.strokeStyle = p.visited ? 'rgba(154,163,214,.18)' : 'rgba(107,227,197,.45)';
-    if (!p.visited && p.type !== 'normal' && p.type !== 'shard') ctx.strokeStyle = 'rgba(255,211,107,.45)';
     ctx.lineWidth = p.visited ? 1 : 1.4;
     ctx.setLineDash([3, 6]);
     ctx.lineDashOffset = -t * 10 * p.spin;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.band + p.pulse * 8, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.band + p.pulse * 8, 0, 6.283); ctx.stroke();
     ctx.restore();
 
     if (p.pulse > 0) {
       ctx.strokeStyle = `rgba(238,240,255,${p.pulse * .6})`;
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + (1 - p.pulse) * 40, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + (1 - p.pulse) * 40, 0, 6.283); ctx.stroke();
     }
 
-    ctx.save();
-    ctx.globalAlpha = ghostA;
-    const glow = p.type === 'random' ? '#eef0ff' : c1;
+    // glow
     const g = ctx.createRadialGradient(p.x, p.y, p.r * .6, p.x, p.y, p.r * 2.2);
-    g.addColorStop(0, hexA(glow, .33)); g.addColorStop(1, hexA(glow, 0));
+    g.addColorStop(0, c1 + '55'); g.addColorStop(1, c1 + '00');
     ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.2, 0, 6.283); ctx.fill();
 
+    // ring back half
     if (p.ring) drawRing(p, true);
+
+    // body
     const b = ctx.createRadialGradient(p.x - p.r * .4, p.y - p.r * .4, p.r * .1, p.x, p.y, p.r);
     b.addColorStop(0, c1); b.addColorStop(1, c2);
     ctx.fillStyle = b;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
-
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+    // bands
     ctx.save();
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.clip();
-    if (p.type === 'magnet') { ctx.fillStyle = '#4a7dff'; ctx.fillRect(p.x, p.y - p.r, p.r, p.r * 2); }
-    if (!['eye', 'ghost', 'balloon', 'mirror', 'gem', 'gold'].includes(p.type)) {
-      ctx.fillStyle = p.type === 'gas' ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.12)';
-      const bh = p.type === 'gas' ? .22 : .12;
-      for (let i = -2; i <= 2; i++) {
-        const off = ((t * 6 * p.spin) % 20);
-        ctx.fillRect(p.x - p.r, p.y + i * p.r * .45 + off * .2, p.r * 2, p.r * bh);
-      }
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    for (let i = -2; i <= 2; i++) {
+      const off = ((t * 6 * p.spin) % 20);
+      ctx.fillRect(p.x - p.r, p.y + i * p.r * .45 + off * .2, p.r * 2, p.r * .12);
     }
     ctx.restore();
-    decorate(p, t);
+
     if (p.ring) drawRing(p, false);
-    ctx.restore();
-
-    if (p.type === 'moon' && !p.moonDead) {
-      const [mx, my] = moonPos(p);
-      ctx.fillStyle = '#d8d8e8';
-      ctx.beginPath(); ctx.arc(mx, my, 5, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#a0a0b8';
-      ctx.beginPath(); ctx.arc(mx - 1.5, my - 1, 1.3, 0, TAU); ctx.arc(mx + 1.8, my + 1.5, .9, 0, TAU); ctx.fill();
-    }
-
-    // eye laser
-    if (p.type === 'eye' && current && p.es !== 'idle') {
-      const ex = Math.cos(p.la), ey = Math.sin(p.la), L = p.band + 16;
-      ctx.save();
-      if (p.es === 'charge') {
-        ctx.strokeStyle = `rgba(255,90,60,${.2 + .6 * (p.et / .7)})`; ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-      } else {
-        ctx.strokeStyle = '#ff5a3c'; ctx.lineWidth = 6; ctx.shadowColor = '#ff5a3c'; ctx.shadowBlur = 16;
-      }
-      ctx.beginPath(); ctx.moveTo(p.x + ex * p.r, p.y + ey * p.r); ctx.lineTo(p.x + ex * L, p.y + ey * L); ctx.stroke();
-      ctx.restore();
-    }
-
-    // type icon above unvisited special planets
-    if (!p.visited && p.type !== 'normal' && p.type !== 'shard' && p.type !== 'move') {
-      ctx.save();
-      ctx.globalAlpha = .9 * ghostA;
-      ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(PT[p.type].i, p.x, p.y - p.r - 14);
-      ctx.restore();
-    }
-
-    // stay timer gauge
-    if (current) {
-      const fin = isFinite(p.T);
-      const f = fin ? clamp(1 - player.stay / p.T, 0, 1) : 1;
-      const rem = fin ? p.T - player.stay : Infinity;
-      const col = !fin ? '#6be3c5' : f > .5 ? '#6be3c5' : f > .25 ? '#ffd36b' : '#ff5a3c';
-      const blink = fin && rem < 1 && Math.floor(t * 10) % 2;
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = 'rgba(238,240,255,.12)'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 7, 0, TAU); ctx.stroke();
-      if (!blink) {
-        ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 8;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 7, -Math.PI / 2, -Math.PI / 2 + f * TAU); ctx.stroke();
-      }
-      ctx.shadowBlur = 0;
-      ctx.font = '16px "Do Hyeon", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const label = fin ? Math.max(0, rem).toFixed(1) : '∞';
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(11,16,48,.75)'; ctx.strokeText(label, p.x, p.y + 1);
-      ctx.fillStyle = fin && rem < 1 ? '#ff8a6b' : '#fff'; ctx.fillText(label, p.x, p.y + 1);
-      if (player.lock > 0) {
-        ctx.fillStyle = '#9cff6b'; ctx.font = '12px "Do Hyeon", sans-serif';
-        ctx.fillText('끈적', p.x, p.y + p.r + 18);
-      }
-      ctx.restore();
-    }
-  }
-
-  function hexA(hex, a) {
-    if (hex[0] !== '#') return `rgba(238,240,255,${a})`;
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
-  }
-
-  function decorate(p, t) {
-    const { x, y, r } = p;
-    ctx.save();
-    switch (p.type) {
-      case 'ice':
-        ctx.translate(x, y); ctx.rotate(t * .5);
-        ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.4;
-        for (let i = 0; i < 3; i++) {
-          const a = i * 2.094, cx = Math.cos(a) * r * .55, cy = Math.sin(a) * r * .55, s = 3.2;
-          ctx.beginPath(); ctx.moveTo(cx - s, cy); ctx.lineTo(cx + s, cy); ctx.moveTo(cx, cy - s); ctx.lineTo(cx, cy + s); ctx.stroke();
-        }
-        break;
-      case 'lava':
-        ctx.strokeStyle = `rgba(255,${180 + 60 * Math.sin(t * 4) | 0},80,.9)`; ctx.lineWidth = 1.6;
-        ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.moveTo(x - r * .6, y - r * .2); ctx.lineTo(x - r * .1, y + r * .1); ctx.lineTo(x + r * .2, y - r * .3); ctx.lineTo(x + r * .6, y);
-        ctx.moveTo(x - r * .3, y + r * .5); ctx.lineTo(x, y + r * .3); ctx.lineTo(x + r * .35, y + r * .55);
-        ctx.stroke();
-        break;
-      case 'volcano':
-        ctx.fillStyle = '#5a2a14';
-        ctx.beginPath(); ctx.moveTo(x - r * .55, y - r * .75); ctx.lineTo(x - r * .18, y - r - 7); ctx.lineTo(x + r * .18, y - r - 7); ctx.lineTo(x + r * .55, y - r * .75); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#ff8a3c'; ctx.shadowColor = '#ff8a3c'; ctx.shadowBlur = 10;
-        ctx.fillRect(x - r * .18, y - r - 8, r * .36, 3);
-        break;
-      case 'gem':
-        ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(x, y - r * .7); ctx.lineTo(x + r * .55, y - r * .15); ctx.lineTo(x, y + r * .7); ctx.lineTo(x - r * .55, y - r * .15); ctx.closePath();
-        ctx.moveTo(x - r * .55, y - r * .15); ctx.lineTo(x + r * .55, y - r * .15);
-        ctx.moveTo(x, y - r * .7); ctx.lineTo(x - r * .2, y - r * .15); ctx.lineTo(x, y + r * .7);
-        ctx.moveTo(x, y - r * .7); ctx.lineTo(x + r * .2, y - r * .15);
-        ctx.stroke();
-        if (Math.sin(t * 3 + p.ph) > .8) { ctx.fillStyle = '#fff'; ctx.fillRect(x + r * .3 - 1, y - r * .45 - 4, 2, 8); ctx.fillRect(x + r * .3 - 4, y - r * .45 - 1, 8, 2); }
-        break;
-      case 'gold':
-        for (let i = 0; i < 4; i++) {
-          const a = t * 1.5 + i * 1.57, rr = r + 6 + Math.sin(t * 4 + i) * 3;
-          const sx = x + Math.cos(a) * rr, sy = y + Math.sin(a) * rr, s = 2.5 + Math.sin(t * 6 + i) * 1.5;
-          ctx.fillStyle = '#fff4c9';
-          ctx.fillRect(sx - s, sy - .6, s * 2, 1.2); ctx.fillRect(sx - .6, sy - s, 1.2, s * 2);
-        }
-        ctx.fillStyle = 'rgba(255,255,255,.5)';
-        ctx.beginPath(); ctx.ellipse(x - r * .35, y - r * .35, r * .25, r * .14, -.6, 0, TAU); ctx.fill();
-        break;
-      case 'electric':
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.shadowColor = '#fff36b'; ctx.shadowBlur = 8;
-        for (let i = 0; i < 3; i++) {
-          if (Math.sin(t * 13 + i * 2.1) < .2) continue;
-          const a = i * 2.1 + Math.floor(t * 8) * .7;
-          ctx.beginPath();
-          let px = x + Math.cos(a) * r * .9, py = y + Math.sin(a) * r * .9;
-          ctx.moveTo(px, py);
-          for (let j = 1; j <= 3; j++) {
-            const rr = r * .9 + j * 4;
-            ctx.lineTo(x + Math.cos(a + (j % 2 ? .15 : -.15)) * rr, y + Math.sin(a + (j % 2 ? .15 : -.15)) * rr);
-          }
-          ctx.stroke();
-        }
-        break;
-      case 'reverse':
-        ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = `${r * 1.1}px sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.translate(x, y); ctx.rotate(-t * 1.5); ctx.fillText('↺', 0, 1);
-        break;
-      case 'slime':
-        ctx.fillStyle = '#9cff6b';
-        for (let i = 0; i < 3; i++) {
-          const dx = (i - 1) * r * .5, len = 3 + 3 * (.5 + .5 * Math.sin(t * 2 + i * 1.7));
-          ctx.beginPath(); ctx.ellipse(x + dx, y + r * .9 + len * .5, 2.6, len, 0, 0, TAU); ctx.fill();
-        }
-        ctx.fillStyle = 'rgba(255,255,255,.45)';
-        ctx.beginPath(); ctx.ellipse(x - r * .35, y - r * .4, r * .22, r * .12, -.6, 0, TAU); ctx.fill();
-        break;
-      case 'mirror': {
-        ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
-        const s = ((t * 40) % (r * 4)) - r * 2;
-        ctx.fillStyle = 'rgba(255,255,255,.7)';
-        ctx.beginPath(); ctx.moveTo(x + s - 6, y - r); ctx.lineTo(x + s + 2, y - r); ctx.lineTo(x + s - 10, y + r); ctx.lineTo(x + s - 18, y + r); ctx.fill();
-        ctx.strokeStyle = 'rgba(127,136,176,.8)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
-        break;
-      }
-      case 'balloon':
-        ctx.fillStyle = '#c2185b';
-        ctx.beginPath(); ctx.moveTo(x - 4, y + r + 5); ctx.lineTo(x + 4, y + r + 5); ctx.lineTo(x, y + r - 1); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,.55)';
-        ctx.beginPath(); ctx.ellipse(x - r * .38, y - r * .4, r * .22, r * .32, -.5, 0, TAU); ctx.fill();
-        break;
-      case 'magnet':
-        ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
-        for (let i = 1; i <= 2; i++) {
-          const rr = r + 10 + ((t * 20 + i * 15) % 30);
-          ctx.globalAlpha = 1 - ((t * 20 + i * 15) % 30) / 30;
-          ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.stroke();
-        }
-        break;
-      case 'cannon':
-        ctx.fillStyle = '#2a2e3e';
-        for (let i = 0; i < 8; i++) { const a = i * TAU / 8; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * .75, y + Math.sin(a) * r * .75, 1.8, 0, TAU); ctx.fill(); }
-        ctx.fillStyle = '#ff8a6b'; ctx.beginPath(); ctx.arc(x, y, r * .25, 0, TAU); ctx.fill();
-        break;
-      case 'ghost':
-        ctx.fillStyle = '#2a3150';
-        ctx.beginPath(); ctx.ellipse(x - r * .3, y - r * .1, r * .12, r * .18, 0, 0, TAU); ctx.ellipse(x + r * .3, y - r * .1, r * .12, r * .18, 0, 0, TAU); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(x, y + r * .35, r * .14, r * .1, 0, 0, TAU); ctx.fill();
-        break;
-      case 'eye': {
-        const la = player ? Math.atan2(player.y - y, player.x - x) : 0;
-        const ox = Math.cos(la) * r * .32, oy = Math.sin(la) * r * .32;
-        ctx.fillStyle = '#ff6b8a';
-        ctx.beginPath(); ctx.arc(x + ox, y + oy, r * .45, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#0b1030';
-        const pr = p.es === 'charge' ? r * .12 : r * .22;
-        ctx.beginPath(); ctx.arc(x + ox * 1.15, y + oy * 1.15, pr, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(x + ox - r * .12, y + oy - r * .14, r * .08, 0, TAU); ctx.fill();
-        ctx.strokeStyle = 'rgba(255,90,110,.4)'; ctx.lineWidth = .8;
-        for (let i = 0; i < 5; i++) { const a = i * 1.25 + .3; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * .95, y + Math.sin(a) * r * .95); ctx.lineTo(x + Math.cos(a + .2) * r * .7, y + Math.sin(a + .2) * r * .7); ctx.stroke(); }
-        break;
-      }
-      case 'gravity':
-      case 'warp': {
-        ctx.translate(x, y); ctx.rotate(t * (p.type === 'warp' ? 4 : -1.5));
-        ctx.strokeStyle = p.type === 'warp' ? 'rgba(107,227,197,.8)' : 'rgba(157,139,255,.8)'; ctx.lineWidth = 1.6;
-        for (let i = 0; i < 3; i++) {
-          ctx.beginPath();
-          for (let s = 0; s <= 20; s++) {
-            const k = s / 20, a = i * 2.094 + k * 3.5, rr = r * (1 - k * .85);
-            s ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
-          }
-          ctx.stroke();
-        }
-        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0, 0, r * .2, 0, TAU); ctx.fill();
-        break;
-      }
-      case 'split':
-        ctx.strokeStyle = 'rgba(40,20,5,.7)'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(x - 2, y - r); ctx.lineTo(x + 3, y - r * .4); ctx.lineTo(x - 3, y + r * .1); ctx.lineTo(x + 2, y + r * .6); ctx.lineTo(x, y + r); ctx.stroke();
-        break;
-      case 'random':
-        ctx.fillStyle = '#fff'; ctx.font = `${r * 1.2}px "Do Hyeon", sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('?', x, y + 2);
-        break;
-      case 'ring':
-        ctx.strokeStyle = 'rgba(196,247,233,.35)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(x, y, r + 4 + Math.sin(t * 2) * 2, 0, TAU); ctx.stroke();
-        break;
-    }
-    ctx.restore();
   }
 
   function drawRing(p, back) {
     ctx.save();
-    ctx.translate(p.x, p.y); ctx.rotate(p.ringTilt);
-    ctx.strokeStyle = p.type === 'ring' ? 'rgba(196,247,233,.8)' : 'rgba(238,240,255,.55)';
-    ctx.lineWidth = p.type === 'ring' ? 4 : 2.5;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.ringTilt);
+    ctx.strokeStyle = 'rgba(238,240,255,.55)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(0, 0, p.r * 1.7, p.r * .45, 0, back ? Math.PI : 0, back ? TAU : Math.PI);
+    ctx.ellipse(0, 0, p.r * 1.7, p.r * .45, 0, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
     ctx.stroke();
     ctx.restore();
   }
 
-  function drawBH(b, t) {
-    ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.strokeStyle = 'rgba(157,139,255,.2)'; ctx.lineWidth = 1;
-    ctx.setLineDash([2, 8]); ctx.lineDashOffset = t * 20;
-    ctx.beginPath(); ctx.arc(0, 0, 75, 0, TAU); ctx.stroke();
-    ctx.setLineDash([]);
-    const g = ctx.createRadialGradient(0, 0, b.r * .8, 0, 0, b.r * 3.4);
-    g.addColorStop(0, 'rgba(157,139,255,.65)'); g.addColorStop(.5, 'rgba(255,138,107,.2)'); g.addColorStop(1, 'rgba(157,139,255,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(0, 0, b.r * 3.4, 0, TAU); ctx.fill();
-    ctx.rotate(t * 2.2);
-    const cols = ['#9d8bff', '#ff8a6b', '#ff9ed1'];
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = cols[i]; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(0, 0, b.r + 4 + i * 4, i * 2, i * 2 + 3.6); ctx.stroke();
-    }
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(0, 0, b.r, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(238,240,255,.6)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawLaser(L, t) {
-    const ph = laserPhase(L), on = ph > .55, warn = ph > .42 && !on;
-    ctx.fillStyle = '#3a3157';
-    ctx.fillRect(-2, L.y - 8, 11, 16); ctx.fillRect(W - 9, L.y - 8, 11, 16);
-    ctx.fillStyle = on ? '#ff8a6b' : warn ? '#ffd36b' : '#9aa3d6';
-    ctx.beginPath(); ctx.arc(5, L.y, 3, 0, TAU); ctx.arc(W - 5, L.y, 3, 0, TAU); ctx.fill();
-    if (on) {
-      ctx.save();
-      ctx.shadowColor = '#ff8a6b'; ctx.shadowBlur = 14;
-      ctx.fillStyle = 'rgba(255,138,107,.9)'; ctx.fillRect(8, L.y - 2.5, W - 16, 5);
-      ctx.fillStyle = '#fff4c9'; ctx.fillRect(8, L.y - 1, W - 16, 2);
-      ctx.restore();
-    } else if (warn) {
-      if (Math.sin(t * 40) > 0) { ctx.fillStyle = 'rgba(255,211,107,.45)'; ctx.fillRect(8, L.y - .75, W - 16, 1.5); }
-    } else {
-      ctx.save();
-      ctx.setLineDash([4, 8]); ctx.strokeStyle = 'rgba(154,163,214,.18)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(8, L.y); ctx.lineTo(W - 8, L.y); ctx.stroke();
-      ctx.restore();
-    }
-  }
-
   function drawRock(r) {
     ctx.save();
-    ctx.translate(r.x, r.y); ctx.rotate(r.rot);
-    ctx.fillStyle = '#5b4a6e'; ctx.strokeStyle = '#ff8a6b'; ctx.lineWidth = 1.5;
+    ctx.translate(r.x, r.y);
+    ctx.rotate(r.rot);
+    ctx.fillStyle = '#5b4a6e';
+    ctx.strokeStyle = '#ff8a6b';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
-      const a = i / 8 * TAU;
+      const a = i / 8 * 6.283;
       const rr = r.r * (.75 + .25 * Math.sin(i * 2.7 + r.seed * 10));
       i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
     }
@@ -1447,164 +439,54 @@ button.card canvas { width: 56px; height: 56px; }
   function drawStar(s) {
     const k = 1 + Math.sin(s.t * 4) * .15;
     ctx.save();
-    ctx.translate(s.x, s.y); ctx.rotate(s.t * .8); ctx.scale(k, k);
-    ctx.fillStyle = '#ffd36b'; ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 12;
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.t * .8);
+    ctx.scale(k, k);
+    ctx.fillStyle = '#ffd36b';
+    ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 12;
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
-      const a = i / 10 * TAU - Math.PI / 2, rr = i % 2 ? 3.5 : 8;
+      const a = i / 10 * 6.283 - Math.PI / 2, rr = i % 2 ? 3.5 : 8;
       i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
     }
     ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
-  function drawItem(it) {
-    const d = ITEM[it.type];
-    const k = 1 + Math.sin(it.t * 3) * .08;
-    ctx.save();
-    ctx.translate(it.x, it.y + Math.sin(it.t * 2) * 3); ctx.scale(k, k);
-    ctx.shadowColor = d.c; ctx.shadowBlur = 14;
-    ctx.fillStyle = 'rgba(11,16,48,.85)'; ctx.strokeStyle = d.c; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, 12, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = d.c;
-    ctx.font = 'bold 12px -apple-system, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(d.ic, 0, 1);
-    ctx.restore();
-  }
-
-  function tri(c, a, b, d) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(d[0], d[1]); c.closePath(); c.fill(); }
-
-  function drawSkin(c, id, t) {
-    switch (id) {
-      case 'rocket':
-        c.fillStyle = '#ff8a6b';
-        tri(c, [-3, -3.5], [-9, -8], [-6, -3]); tri(c, [-3, 3.5], [-9, 8], [-6, 3]);
-        c.fillStyle = '#ffd36b';
-        tri(c, [-6, -2.5], [-11 - Math.sin(t * 30) * 2.5, 0], [-6, 2.5]);
-        c.fillStyle = '#eef0ff';
-        c.beginPath(); c.moveTo(11, 0); c.quadraticCurveTo(6, -5.5, -6, -4); c.lineTo(-6, 4); c.quadraticCurveTo(6, 5.5, 11, 0); c.fill();
-        c.shadowBlur = 0;
-        c.fillStyle = '#7cc3ff'; c.beginPath(); c.arc(2, 0, 2.1, 0, TAU); c.fill();
-        break;
-      case 'ufo':
-        c.fillStyle = 'rgba(107,227,197,.75)';
-        c.beginPath(); c.arc(0, -2, 5.5, Math.PI, 0); c.fill();
-        c.fillStyle = '#9d8bff';
-        c.beginPath(); c.ellipse(0, 0, 11.5, 4, 0, 0, TAU); c.fill();
-        c.shadowBlur = 0;
-        for (let i = -1; i <= 1; i++) {
-          c.fillStyle = ((Math.floor(t * 6) + i + 2) % 2) ? '#ffd36b' : '#fff4c9';
-          c.beginPath(); c.arc(i * 5, .6, 1.3, 0, TAU); c.fill();
-        }
-        break;
-      case 'cat': {
-        c.fillStyle = '#ffd36b';
-        tri(c, [-6.5, -2], [-5.5, -10.5], [-1, -6]); tri(c, [6.5, -2], [5.5, -10.5], [1, -6]);
-        c.beginPath(); c.arc(0, 0, 7.5, 0, TAU); c.fill();
-        c.shadowBlur = 0;
-        c.fillStyle = '#ff9ed1';
-        tri(c, [-5.3, -4], [-5, -8.3], [-2.6, -5.6]); tri(c, [5.3, -4], [5, -8.3], [2.6, -5.6]);
-        c.fillStyle = '#0b1030';
-        const blink = (t % 3) < .12 ? .3 : 1.4;
-        c.beginPath(); c.ellipse(-2.7, -.8, 1.2, blink, 0, 0, TAU); c.ellipse(2.7, -.8, 1.2, blink, 0, 0, TAU); c.fill();
-        c.fillStyle = '#ff6fae'; c.beginPath(); c.arc(0, 1.8, .9, 0, TAU); c.fill();
-        c.strokeStyle = 'rgba(11,16,48,.6)'; c.lineWidth = .6;
-        c.beginPath();
-        c.moveTo(-3, 2.5); c.lineTo(-9, 1.5); c.moveTo(-3, 3.2); c.lineTo(-9, 4);
-        c.moveTo(3, 2.5); c.lineTo(9, 1.5); c.moveTo(3, 3.2); c.lineTo(9, 4);
-        c.stroke();
-        break;
-      }
-      case 'paper':
-        c.fillStyle = '#ffffff'; tri(c, [12, 0], [-8, -8], [-3, 0]);
-        c.fillStyle = '#c9cdf0'; tri(c, [12, 0], [-3, 0], [-8, 8]);
-        c.shadowBlur = 0;
-        c.fillStyle = '#9aa3d6'; tri(c, [12, 0], [-3, 0], [-5, 3]);
-        break;
-      case 'comet': {
-        c.fillStyle = 'rgba(255,211,107,.45)'; tri(c, [-2, -5], [-18 - Math.sin(t * 20) * 2, 0], [-2, 5]);
-        const g = c.createRadialGradient(-1, -1, .5, 0, 0, 6.5);
-        g.addColorStop(0, '#fff4c9'); g.addColorStop(.5, '#ffd36b'); g.addColorStop(1, '#ff8a6b');
-        c.fillStyle = g; c.beginPath(); c.arc(0, 0, 6.5, 0, TAU); c.fill();
-        break;
-      }
-      default:
-        c.fillStyle = '#eef0ff';
-        c.beginPath();
-        c.moveTo(9, 0); c.lineTo(-6, -5.5); c.lineTo(-3, 0); c.lineTo(-6, 5.5);
-        c.closePath(); c.fill();
-    }
-  }
-
-  function drawPlayer(t) {
-    if (invuln > 0 && Math.floor(t * 18) % 2) return;
-    const sk = SKINS.find(s => s.id === save.skin) || SKINS[0];
+  function drawPlayer() {
     let ang;
     if (player.mode === 'fly') ang = Math.atan2(player.vy, player.vx);
     else ang = player.a + player.dir * Math.PI / 2;
-    if (sk.norot) ang = Math.sin(t * 3) * .15 + (player.mode === 'fly' ? clamp(player.vx / 400, -.4, .4) : 0);
-
-    if (magT > 0) {
-      ctx.strokeStyle = `rgba(255,158,209,${.12 + .08 * Math.sin(t * 6)})`; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(player.x, player.y, 150, 0, TAU); ctx.stroke();
-    }
-
     ctx.save();
-    ctx.translate(player.x, player.y); ctx.rotate(ang);
-    ctx.shadowColor = sk.glow; ctx.shadowBlur = 14;
-    drawSkin(ctx, sk.id, t);
+    ctx.translate(player.x, player.y);
+    ctx.rotate(ang);
+    ctx.shadowColor = '#6be3c5'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#eef0ff';
+    ctx.beginPath();
+    ctx.moveTo(9, 0); ctx.lineTo(-6, -5.5); ctx.lineTo(-3, 0); ctx.lineTo(-6, 5.5);
+    ctx.closePath(); ctx.fill();
     ctx.restore();
 
-    if (shield) {
-      ctx.save();
-      ctx.strokeStyle = `rgba(124,195,255,${.6 + .25 * Math.sin(t * 5)})`; ctx.lineWidth = 2;
-      ctx.shadowColor = '#7cc3ff'; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(player.x, player.y, 15, 0, TAU); ctx.stroke();
-      ctx.restore();
-    }
-
+    // launch preview: short tangent guide while orbiting
     if (player.mode === 'orbit' && state === 'play') {
-      const [tx, ty, m] = launchVec();
-      const pt = player.planet.type;
-      const len = m > 1 ? 120 : 70;
+      const tx = -Math.sin(player.a) * player.dir, ty = Math.cos(player.a) * player.dir;
       ctx.save();
-      ctx.strokeStyle = player.lock > 0 ? 'rgba(156,255,107,.3)' : pt === 'mirror' ? 'rgba(201,160,255,.6)' : m > 1 ? 'rgba(255,138,107,.55)' : 'rgba(238,240,255,.28)';
-      ctx.setLineDash([2, 5]); ctx.lineWidth = m > 1 ? 2 : 1.2;
+      ctx.strokeStyle = 'rgba(238,240,255,.28)';
+      ctx.setLineDash([2, 5]);
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(player.x + tx * 14, player.y + ty * 14);
-      ctx.lineTo(player.x + tx * len, player.y + ty * len);
+      ctx.moveTo(player.x + tx * 12, player.y + ty * 12);
+      ctx.lineTo(player.x + tx * 70, player.y + ty * 70);
       ctx.stroke();
       ctx.restore();
     }
   }
 
-  function drawPowerups() {
-    const list = [];
-    if (shield) list.push(['shield', 1]);
-    if (magT > 0) list.push(['magnet', magT / DUR.magnet]);
-    if (slowT > 0) list.push(['slow', slowT / DUR.slow]);
-    if (dblT > 0) list.push(['double', dblT / DUR.double]);
-    if (!list.length) return;
-    const y = H - 36, x0 = W / 2 - (list.length - 1) * 22;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    list.forEach(([k, f], i) => {
-      const x = x0 + i * 44, d = ITEM[k];
-      ctx.fillStyle = 'rgba(11,16,48,.8)';
-      ctx.beginPath(); ctx.arc(x, y, 16, 0, TAU); ctx.fill();
-      ctx.strokeStyle = 'rgba(238,240,255,.15)'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(x, y, 16, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = d.c;
-      ctx.beginPath(); ctx.arc(x, y, 16, -Math.PI / 2, -Math.PI / 2 + f * TAU); ctx.stroke();
-      ctx.fillStyle = d.c; ctx.font = 'bold 13px -apple-system, sans-serif';
-      ctx.fillText(d.ic, x, y + 1);
-    });
-  }
-
   function draw(t) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+    // parallax starfield (screen space)
     ctx.setTransform(S, 0, 0, S, 0, 0);
     for (const s of bg) {
       const span = H + 20;
@@ -1613,163 +495,52 @@ button.card canvas { width: 56px; height: 56px; }
       ctx.fillStyle = `rgba(238,240,255,${a})`;
       ctx.fillRect(s.x, y - 10, s.z * 1.8, s.z * 1.8);
     }
-    if (flash > 0) { ctx.fillStyle = `rgba(255,211,107,${flash * .08})`; ctx.fillRect(0, 0, W, H); }
+    if (flash > 0) {
+      ctx.fillStyle = `rgba(255,211,107,${flash * .08})`;
+      ctx.fillRect(0, 0, W, H);
+    }
 
     const sx = shake ? rand(-shake, shake) : 0, sy = shake ? rand(-shake, shake) : 0;
     ctx.setTransform(S, 0, 0, S, sx * S, (-camY + sy) * S);
 
-    for (const L of lasers) drawLaser(L, wt);
-    for (const p of planets) if (!p.dead) drawPlanet(p, wt);
-    for (const b of bhs) if (!b.dead) drawBH(b, wt);
+    for (const p of planets) drawPlanet(p, t);
     for (const s of stars) if (!s.got) drawStar(s);
-    for (const it of items) drawItem(it);
     for (const r of rocks) drawRock(r);
-
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const p of parts) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
       ctx.fillStyle = p.c;
-      if (p.shape === 'heart') { ctx.font = `${p.s * 1.5}px sans-serif`; ctx.fillText('♥', p.x, p.y); }
-      else if (p.shape === 'spark') {
-        const s = p.s * (p.life / p.max);
-        ctx.fillRect(p.x - s, p.y - .6, s * 2, 1.2); ctx.fillRect(p.x - .6, p.y - s, 1.2, s * 2);
-      } else ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+      ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
     }
     ctx.globalAlpha = 1;
-    if (state !== 'dying' && state !== 'over') drawPlayer(t);
-
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const tx of texts) {
-      ctx.globalAlpha = Math.min(1, tx.life * 2);
-      ctx.font = `${tx.big ? 20 : 16}px "Do Hyeon", sans-serif`;
-      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(11,16,48,.8)';
-      ctx.strokeText(tx.s, tx.x, tx.y);
-      ctx.fillStyle = tx.c; ctx.fillText(tx.s, tx.x, tx.y);
-    }
-    ctx.globalAlpha = 1;
-
-    ctx.setTransform(S, 0, 0, S, 0, 0);
-    if (state === 'play' && slowT > 0) {
-      const g = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75);
-      g.addColorStop(0, 'rgba(157,139,255,0)'); g.addColorStop(1, 'rgba(157,139,255,.22)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    }
-    if (state === 'play') drawPowerups();
+    if (state !== 'dying' && state !== 'over') drawPlayer();
   }
 
   // ---------- loop ----------
-  let last = performance.now(), dblShown = false;
+  let last = performance.now(), clock = 0;
   function frame(now) {
     const dt = Math.min((now - last) / 1000, 1 / 30);
     last = now; clock += dt;
     update(dt);
     draw(clock);
-    const d = state === 'play' && dblT > 0;
-    if (d !== dblShown) { dblShown = d; $('score').classList.toggle('dbl', d); }
-    if (state === 'play' && combo < 2 && $('combo').textContent) $('combo').textContent = '';
     requestAnimationFrame(frame);
   }
 
-  // ---------- sub screens (shop, codex) ----------
-  let subFrom = 'startOverlay', subOpen = null;
-  function openSub(id, from) {
-    au(); sfx.click();
-    subFrom = from; subOpen = id;
-    $(from).hidden = true;
-    if (id === 'shopOverlay') renderShop(); else renderCodex();
-    $(id).hidden = false;
-  }
-  function closeSub() {
-    if (!subOpen) return;
-    sfx.click();
-    $(subOpen).hidden = true;
-    subOpen = null;
-    $(subFrom).hidden = false;
-    updateWallets();
-  }
-
-  function renderShop() {
-    updateWallets();
-    const mk = (list, owned, cur, kind) => list.map(it => {
-      const own = owned.includes(it.id), on = cur === it.id;
-      const vis = kind === 'skin'
-        ? `<canvas data-skin="${it.id}"></canvas>`
-        : `<div class="swatch" style="background:${it.bg}">${it.label || ''}</div>`;
-      return `<button class="card ${on ? 'on' : ''} ${own ? '' : 'locked'}" data-kind="${kind}" data-id="${it.id}" type="button">${vis}<div>${it.name}</div><div class="price">${on ? '장착 중' : own ? '장착하기' : '★ ' + it.price}</div></button>`;
-    }).join('');
-    $('skinGrid').innerHTML = mk(SKINS, save.skins, save.skin, 'skin');
-    $('trailGrid').innerHTML = mk(TRAILS, save.trails, save.trail, 'trail');
-    document.querySelectorAll('#skinGrid canvas').forEach(c => {
-      const k = 2; c.width = 56 * k; c.height = 56 * k;
-      const x = c.getContext('2d');
-      x.scale(k, k); x.translate(28, 28); x.scale(2.2, 2.2);
-      const sk = SKINS.find(s => s.id === c.dataset.skin);
-      x.shadowColor = sk.glow; x.shadowBlur = 6;
-      drawSkin(x, sk.id, 0);
-    });
-  }
-  function renderCodex() {
-    const found = CODEX_KEYS.filter(k => save.found.includes(k)).length;
-    $('codexCount').textContent = `${found} / ${CODEX_KEYS.length}`;
-    $('codexList').innerHTML = CODEX_KEYS.map(k => {
-      const d = PT[k], f = save.found.includes(k);
-      const time = isFinite(d.T) ? `머물 수 있는 시간 ${d.T}초` : '시간 제한 없음';
-      return f
-        ? `<div class="crow"><div class="ci">${d.i}</div><div><b>${d.n}</b><small>${time}</small><p>${d.d}</p></div></div>`
-        : `<div class="crow unk"><div class="ci">❔</div><div><b>???</b><small>행성 ${Math.max(1, d.u - 3)}개쯤부터 나와요</small></div></div>`;
-    }).join('');
-  }
-
-  $('shopOverlay').addEventListener('click', e => {
-    const b = e.target.closest('.card');
-    if (!b) return;
-    au();
-    const kind = b.dataset.kind, id = b.dataset.id;
-    const list = kind === 'skin' ? SKINS : TRAILS;
-    const owned = kind === 'skin' ? save.skins : save.trails;
-    const it = list.find(x => x.id === id);
-    if (!owned.includes(id)) {
-      if (save.bank < it.price) { sfx.deny(); toast(`별이 ${it.price - save.bank}개 부족해요`); return; }
-      save.bank -= it.price; owned.push(id); sfx.buy(); toast(`${it.name} 구매 완료!`);
-    } else sfx.click();
-    if (kind === 'skin') save.skin = id; else save.trail = id;
-    persist();
-    renderShop();
-  });
-  $('shopBtn1').addEventListener('click', () => openSub('shopOverlay', 'startOverlay'));
-  $('shopBtn2').addEventListener('click', () => openSub('shopOverlay', 'overOverlay'));
-  $('codexBtn1').addEventListener('click', () => openSub('codexOverlay', 'startOverlay'));
-  $('codexBtn2').addEventListener('click', () => openSub('codexOverlay', 'overOverlay'));
-  $('shopBack').addEventListener('click', closeSub);
-  $('codexBack').addEventListener('click', closeSub);
-
   // ---------- input ----------
-  cvs.addEventListener('pointerdown', e => { e.preventDefault(); au(); launch(); });
+  cvs.addEventListener('pointerdown', e => { e.preventDefault(); launch(); });
   addEventListener('keydown', e => {
-    if (subOpen) { if (e.code === 'Escape') closeSub(); return; }
     if (e.code !== 'Space' && e.code !== 'Enter') return;
     if (e.target instanceof HTMLButtonElement && e.code === 'Enter') return;
     e.preventDefault();
     if (e.repeat) return;
-    au();
     if (state === 'menu' || state === 'over') start();
     else launch();
   });
   $('startBtn').addEventListener('click', start);
   $('retryBtn').addEventListener('click', start);
-  $('muteBtn').addEventListener('click', () => {
-    save.muted = !save.muted; persist(); updateMuteBtn();
-    au(); if (!save.muted) { sfx.click(); vib(15); }
-  });
 
-  // debug hook for automated tests only
-  window.__orbit = { get state() { return state; }, get player() { return player; }, get planets() { return planets; }, get score() { return score; }, PT };
-
-  $('missions').innerHTML = '<h3>미션</h3>' + save.missions.map(m => missionLine(m, '')).join('');
-  updateWallets();
   reset();
   requestAnimationFrame(frame);
 })();
 </script>
-</body>
-</html>
+
+</body></html>
