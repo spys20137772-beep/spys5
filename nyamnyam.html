@@ -3,11 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#3b2a1e">
 <title>냠냠 식당</title>
 <style>
 :root{--ink:#3b2a1e;--sub:#8a7060;--accent:#ff7a45;--accent2:#ffb347;--line:#f0dcc6;--panel:#fffaf3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:#4a5d3a;overflow:hidden;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;touch-action:none}
+html,body{margin:0;height:100%;height:100dvh;background:#4a5d3a;overflow:hidden;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;touch-action:none}
 #app{position:fixed;inset:0}
 #world{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hidden{display:none!important}
@@ -316,7 +320,7 @@ function drawDish(g,id,x,y,s){const r=s/2;switch(id){
 
 /* ---------------- 옵션 / 사운드 / 이펙트 ---------------- */
 const OPT_KEY='nyamnyam_opt';
-let OPT=(()=>{let o={};try{o=JSON.parse(localStorage.getItem(OPT_KEY)||'{}')}catch(e){}return Object.assign({sfx:.7,bgm:.35,vib:true,joy:'M',lefty:false},o)})();
+let OPT=(()=>{let o={};try{o=JSON.parse(localStorage.getItem(OPT_KEY)||'{}')}catch(e){}return Object.assign({full:true,sfx:.7,bgm:.35,vib:true,joy:'M',lefty:false},o)})();
 function saveOpt(){try{localStorage.setItem(OPT_KEY,JSON.stringify(OPT))}catch(e){}}
 let AC=null,sfxGain=null,bgmGain=null,bgmT=0,bgmStep=0;
 function audioInit(){if(AC){if(AC.state==='suspended')AC.resume();return}try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;AC=new C();sfxGain=AC.createGain();bgmGain=AC.createGain();sfxGain.connect(AC.destination);bgmGain.connect(AC.destination);applyVol()}catch(e){AC=null}}
@@ -328,6 +332,7 @@ function vib(ms){if(OPT.vib&&navigator.vibrate){try{navigator.vibrate(ms)}catch(
 const PROG=[[261.6,329.6,392],[220,261.6,329.6],[174.6,220,261.6],[196,246.9,293.7]];
 function bgmTick(){if(!AC||OPT.bgm<=0||!running||paused||over)return;const spb=(S&&isPeak())?.22:.3;if(bgmT<AC.currentTime)bgmT=AC.currentTime+.05;while(bgmT<AC.currentTime+.25){const bar=Math.floor(bgmStep/8)%4,b=bgmStep%8,ch=PROG[bar];const w=bgmT-AC.currentTime;if(b===0||b===4)tone(ch[0]/2,spb*1.8,'triangle',.5,w,null,bgmGain);tone(ch[[0,1,2,1,0,2,1,2][b]]*2,spb*.9,'sine',.16,w,null,bgmGain);bgmStep++;bgmT+=spb}}
 document.addEventListener('pointerdown',audioInit,{passive:true});
+document.addEventListener('pointerup',()=>{if(running&&OPT.full!==false&&!document.fullscreenElement&&!document.webkitFullscreenElement)goFull()},{passive:true});
 let FX=[];
 function fxText(x,y,text,col){FX.push({k:'t',x,y,text,col,t:0,life:1.3})}
 function fxCoins(x,y,n){for(let i=0;i<n;i++)FX.push({k:'c',x,y,vx:rnd(-45,45),vy:rnd(-120,-60),t:0,life:.9})}
@@ -909,11 +914,10 @@ const mup=e=>{if(mgLive()&&mg.up){const p=mpos(e);mg.up(p.x,p.y)}};mgCv.addEvent
 /* ---------------- 월드 그리기 ---------------- */
 const wcv=$('world'),wctx=wcv.getContext('2d');
 let DPR=1,cvW=0,cvH=0,Z=1;const cam={x:0,y:0};
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);cvW=window.innerWidth;cvH=window.innerHeight;wcv.width=Math.round(cvW*DPR);wcv.height=Math.round(cvH*DPR);Z=clamp(cvW/(9.5*T),.75,1.6);if(mgCtl)fitMG()}
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);cvW=window.innerWidth;cvH=window.innerHeight;wcv.width=Math.round(cvW*DPR);wcv.height=Math.round(cvH*DPR);fitZoom();if(mgCtl)fitMG()}
+function fitZoom(){if(!S){Z=clamp(cvW/(9.5*T),.75,1.6);return}const MWp=gw*T,MHp=(gh+2)*T;Z=editMode?clamp(Math.min(cvW/MWp,cvH*.55/MHp)*1.1,.5,1.6):clamp(Math.max(Math.min(cvW,cvH)/(8.5*T),Math.min(cvW/MWp,cvH/MHp)),.6,2.6)}
 window.addEventListener('resize',resize);
-function clampCam(){const vw=cvW/Z,vh=cvH/Z,MWp=gw*T,MHp=(gh+2)*T;const topM=(editMode?20:150)/Z,botM=(editMode?cvH*.5:170)/Z;
- if(MWp+40<vw)cam.x=(MWp-vw)/2;else cam.x=clamp(cam.x,-20,MWp-vw+20);
- const minY=-topM,maxY=MHp-vh+botM;if(maxY<minY)cam.y=(minY+maxY)/2;else cam.y=clamp(cam.y,minY,maxY)}
+function clampCam(){fitZoom();const vw=cvW/Z,vh=cvH/Z,MWp=gw*T,MHp=(gh+2)*T;if(editMode){const topM=20/Z,botM=cvH*.5/Z;if(MWp+40<vw)cam.x=(MWp-vw)/2;else cam.x=clamp(cam.x,-20,MWp-vw+20);const minY=-topM,maxY=MHp-vh+botM;if(maxY<minY)cam.y=(minY+maxY)/2;else cam.y=clamp(cam.y,minY,maxY);return}cam.x=MWp<=vw?(MWp-vw)/2:clamp(cam.x,0,MWp-vw);cam.y=MHp<=vh?(MHp-vh)/2:clamp(cam.y,0,MHp-vh)}
 function counterBase(g,x,y,w,h,c){rr(g,x+1,y+1,w-2,h-2,4,c,shade(c,-45),1.5);rr(g,x+1,y+h-9,w-2,8,3,shade(c,-22))}
 function drawFurn(g,f,alpha){const d=fdim(f),x=f.x*T,y=f.y*T,w=d.w*T,h=d.h*T,c=f.col||FURN[f.type].col,F=FS[f.id];g.save();if(alpha!=null)g.globalAlpha=alpha;
  switch(f.type){
@@ -973,17 +977,28 @@ function drawWalls(g){const wc=S.deco.wall;g.fillStyle='#bfb6a8';g.fillRect(0,gh
  const fence=(x,y,hor)=>{g.fillStyle='#cfc6b8';g.fillRect(x*T,y*T,T,T);g.fillStyle='#8d5a3b';if(hor){g.fillRect(x*T,y*T+T/2-6,T,4);g.fillRect(x*T,y*T+T/2+2,T,4);g.fillRect(x*T+4,y*T+T/2-10,5,18);g.fillRect(x*T+T-9,y*T+T/2-10,5,18)}else{const cx=x*T+(x?6:T-10);g.fillRect(cx,y*T,4,T);g.fillRect(cx+4,y*T+4,4,6);g.fillRect(cx+4,y*T+T-10,4,6)}};
  for(let x=0;x<gw;x++)for(const y of[0,gh-1]){if(y===gh-1&&x===DOORX)continue;if(y===gh-1&&S.terrace){fence(x,y,true);continue}g.fillStyle=wc;g.fillRect(x*T,y*T,T,T);g.fillStyle=shade(wc,25);g.fillRect(x*T,y*T,T,6)}
  for(let y=1;y<gh-1;y++)for(const x of[0,gw-1]){if(isTerraceRow(y)){fence(x,y,false);continue}g.fillStyle=wc;g.fillRect(x*T,y*T,T,T);g.fillStyle=shade(wc,25);g.fillRect(x*T+(x?0:T-6),y*T,6,T)}
- if(S.terrace){g.fillStyle='#cfc6b8';g.fillRect(DOORX*T,(gh-1)*T,T,T);g.fillStyle='#a47a5a';g.fillRect(DOORX*T+4,(gh-1)*T+4,T-8,T-8)}else{g.fillStyle='#8d5a3b';g.fillRect(DOORX*T+4,(gh-1)*T+8,T-8,T-16);g.fillStyle='#a5714d';g.fillRect(DOORX*T+6,(gh-1)*T+10,T-12,T-20)}
+ g.fillStyle=S.deco.wall;g.fillRect(DOORX*T,(gh-1)*T,T,T);if(S.terrace){g.fillStyle='#cfc6b8';g.fillRect(DOORX*T,(gh-1)*T,T,T);g.fillStyle='#a47a5a';g.fillRect(DOORX*T+4,(gh-1)*T+4,T-8,T-8)}else{g.fillStyle='#8d5a3b';g.fillRect(DOORX*T+4,(gh-1)*T+8,T-8,T-16);g.fillStyle='#a5714d';g.fillRect(DOORX*T+6,(gh-1)*T+10,T-12,T-20)}
  if(S.terrace){const wy=gh-4;for(let x=1;x<gw-1;x++){if(x===DOORX)continue;g.fillStyle='rgba(0,0,0,.08)';g.fillRect(x*T,(wy+1)*T,T,3)}}
  const sx=(DOORX+1)*T+6,sw=Math.min(4,gw-DOORX-2)*T-12;rr(g,sx,(gh-1)*T+7,sw,T-14,5,'#3b2a1e');tx(g,S.deco.sign||'',sx+sw/2,(gh-.5)*T,13,'#ffe066','900')}
 let layerC=null,layerKey='';
 function drawStatic(g){const sc=Math.min(2.5,DPR*Z);const k=[gw,gh,S.terrace,S.deco.floor,S.deco.floorCol,S.deco.wall,S.deco.sign,sc.toFixed(2)].join('|');if(k!==layerKey||!layerC){layerKey=k;layerC=document.createElement('canvas');layerC.width=Math.ceil(gw*T*sc);layerC.height=Math.ceil((gh+2)*T*sc);const lg=layerC.getContext('2d');lg.setTransform(sc,0,0,sc,0,0);drawFloor(lg);drawWalls(lg)}g.drawImage(layerC,0,0,gw*T,(gh+2)*T)}
 function pointAt(g,t,col,big){let x,y;if(t.pt){x=t.pt.x;y=t.pt.y-30}else{const d=fdim(t);x=(t.x+d.w/2)*T;y=t.y*T-6}const b=Math.sin(playT*6)*4;y+=b-(big?10:4);const s=big?11:7;g.beginPath();g.moveTo(x,y+s);g.lineTo(x-s,y-s*.4);g.lineTo(x+s,y-s*.4);g.closePath();g.fillStyle=col;g.fill();g.strokeStyle='#fff';g.lineWidth=2;g.stroke();if(big&&!t.pt){const d=fdim(t);g.save();g.globalAlpha=.35+.25*Math.sin(playT*6);rr(g,t.x*T-2,t.y*T-2,d.w*T+4,d.h*T+4,8,null,col,4);g.restore()}}
 function hintTargets(){const C=chef.carry;if(chef.lead){const t=bestTable(chef.lead);return t?[t]:[]}if(!C)return[];if(C.type==='dirty')return S.furn.filter(f=>f.type==='sink');const d=C.dish;if(d.ready){return S.furn.filter(t=>{if(!isTable(t))return false;const F=FS[t.id];const g=F&&F.group&&groups.find(x=>x.id===F.group);return g&&serveMatch(d,g)})}const st=menuById(d.menu).steps[d.step].st;return S.furn.filter(f=>FURN[f.type].st===st&&!(FS[f.id]&&FS[f.id].busy))}
-function render(){const g=wctx;g.setTransform(DPR,0,0,DPR,0,0);g.fillStyle='#4a5d3a';g.fillRect(0,0,cvW,cvH);if(!S)return;
+const hsh=(x,y)=>{let h=(x*374761393+y*668265263)|0;h=(h^(h>>>13))*1274126177|0;return((h^(h>>>16))>>>0)/4294967296};
+function drawOutdoor(g){const x0=Math.floor(cam.x/T)-1,x1=Math.ceil((cam.x+cvW/Z)/T)+1,y0=Math.floor(cam.y/T)-1,y1=Math.ceil((cam.y+cvH/Z)/T)+1;const H2=gh+2;
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(x>=0&&x<gw&&y>=0&&y<H2)continue;const X=x*T,Y=y*T;
+  if(y>=H2&&y<H2+2){g.fillStyle='#3d4249';g.fillRect(X,Y,T,T);if(y===H2+1&&x%2===0){g.fillStyle='#e9ecef';g.fillRect(X+4,Y-2,T-8,4)}if(y===H2){g.fillStyle='#868e96';g.fillRect(X,Y,T,3)}continue}
+  if(y>=H2&&y<H2+3&&false)continue;
+  if(y>=gh&&y<H2){g.fillStyle='#cfc6b8';g.fillRect(X,Y,T,T);g.fillStyle='#bfb6a8';g.fillRect(X,Y+T-1,T,1);g.fillRect(X+T-1,Y,1,T);continue}
+  if(y>=H2+2){g.fillStyle='#cfc6b8';g.fillRect(X,Y,T,T);g.fillStyle='#bfb6a8';g.fillRect(X,Y+T-1,T,1);g.fillRect(X+T-1,Y,1,T);continue}
+  g.fillStyle=(x+y)%2?'#6a9a4a':'#649446';g.fillRect(X,Y,T,T);const r=hsh(x,y);
+  if(r<.18){circ(g,X+T/2,Y+T/2+5,13,'rgba(0,0,0,.18)');circ(g,X+T/2,Y+T/2,14,'#2f9e44');circ(g,X+T/2-5,Y+T/2-5,8,'#51cf66')}
+  else if(r<.26){for(let i=0;i<4;i++)circ(g,X+10+i*6,Y+24+(i%2)*4,3,['#ff8787','#ffe066','#fff','#f783ac'][i])}
+  else if(r<.32){circ(g,X+T/2,Y+T/2,9,'#8ce99a');circ(g,X+T/2+6,Y+T/2+3,7,'#69db7c')}}}
+function render(){const g=wctx;g.setTransform(DPR,0,0,DPR,0,0);g.fillStyle='#649446';g.fillRect(0,0,cvW,cvH);if(!S)return;
  if(!editMode&&chef){cam.x=chef.x-cvW/Z/2;cam.y=chef.y-cvH/Z/2+10}clampCam();
  g.save();g.scale(Z,Z);g.translate(-cam.x,-cam.y);
- drawStatic(g);S.furn.forEach(f=>{if(FURN[f.type].kind==='rug')drawFurn(g,f,ED.ghost&&ED.ghost.from===f.id?.35:null)});
+ drawOutdoor(g);drawStatic(g);S.furn.forEach(f=>{if(FURN[f.type].kind==='rug')drawFurn(g,f,ED.ghost&&ED.ghost.from===f.id?.35:null)});
  if(editMode){g.strokeStyle='rgba(0,0,0,.12)';g.lineWidth=1;for(let x=1;x<gw;x++){g.beginPath();g.moveTo(x*T,T);g.lineTo(x*T,(gh-1)*T);g.stroke()}for(let y=1;y<gh;y++){g.beginPath();g.moveTo(T,y*T);g.lineTo((gw-1)*T,y*T);g.stroke()}rr(g,DOORX*T+4,(gh-2)*T+4,T-8,T-8,6,'rgba(64,192,87,.25)')}
  const dr=[];S.furn.forEach(f=>{if(FURN[f.type].kind!=='rug')dr.push({k:f.y+fdim(f).h-.02,f})});
  if(chef)dr.push({k:chef.y/T+.5,p:()=>{const by=bob(chef);person(g,chef.x,chef.y+by,chef.dir,S.deco.chef,'#f8d5b8','#2b1d14',S.deco.hat);drawCarry(g,chef.x,chef.y,chef.dir,chef.carry)}});
@@ -1183,6 +1198,7 @@ function openSettings(){paused=true;const seg=(key,vals)=>vals.map(([v,n])=>`<bu
  showModal(`<div class="ph"><h2>설정</h2><button class="x" data-m="back">X</button></div><div class="pb">
  <div class="lbl">효과음 ${Math.round(OPT.sfx*100)}%</div><input type="range" min="0" max="100" step="10" value="${Math.round(OPT.sfx*100)}" data-r="sfx" style="width:100%">
  <div class="lbl">배경음악 ${Math.round(OPT.bgm*100)}%</div><input type="range" min="0" max="100" step="10" value="${Math.round(OPT.bgm*100)}" data-r="bgm" style="width:100%">
+ <div class="lbl">전체화면 (주소창 숨기기)</div><div class="ebtns">${seg('full',[[true,'켜기'],[false,'끄기']])}</div>
  <div class="lbl">진동</div><div class="ebtns">${seg('vib',[[true,'켜기'],[false,'끄기']])}</div>
  <div class="lbl">조이스틱 크기</div><div class="ebtns">${seg('joy',[['S','작게'],['M','보통'],['L','크게']])}</div>
  <div class="lbl">손잡이</div><div class="ebtns">${seg('lefty',[[false,'오른손 (버튼 오른쪽)'],[true,'왼손 (버튼 왼쪽)']])}</div>
@@ -1191,7 +1207,7 @@ function openSettings(){paused=true;const seg=(key,vals)=>vals.map(([v,n])=>`<bu
  </div>`);
  const P=$('panel');P.querySelectorAll('[data-r]').forEach(r=>r.oninput=()=>{OPT[r.dataset.r]=+r.value/100;applyVol();saveOpt();r.previousElementSibling.textContent=(r.dataset.r==='sfx'?'효과음 ':'배경음악 ')+r.value+'%';if(r.dataset.r==='sfx')sfx('tap')});
  P.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.m==='back'){openPause();return}
-  if(b.dataset.o){const v=b.dataset.v;OPT[b.dataset.o]=v==='true'?true:v==='false'?false:v;saveOpt();applyOpt();openSettings();return}
+  if(b.dataset.o){const v=b.dataset.v;OPT[b.dataset.o]=v==='true'?true:v==='false'?false:v;saveOpt();applyOpt();if(b.dataset.o==='full'){if(OPT.full)goFull();else if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}openSettings();return}
   const x=b.dataset.x,ta=$('saveCode');
   if(x==='tut'){S.tut=0;saveLocal();closeModal();toast('튜토리얼을 다시 시작해요')}
   else if(x==='help')openHelp();
@@ -1243,7 +1259,9 @@ function initTitle(){const l=loadLocal();const nb=$('newBtn');nb.textContent='�
 drawLogo();initTitle();applyOpt();
 let forceNew=false;
 $('newBtn').onclick=()=>{const nb=$('newBtn');if(!nb.dataset.armed){nb.dataset.armed='1';nb.textContent='정말? 한 번 더 누르면 초기화';return}forceNew=true;startGame()};
-async function startGame(){const b=$('startBtn');b.disabled=true;b.textContent='가게 여는 중…';const name=($('nameIn').value.trim()||('사장님'+Math.floor(1000+Math.random()*9000))).slice(0,10);
+function goFull(){if(OPT.full===false)return;const el=document.documentElement;if(document.fullscreenElement||document.webkitFullscreenElement)return;try{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{})}catch(e){}}
+window.addEventListener('resize',()=>setTimeout(resize,60));
+async function startGame(){goFull();const b=$('startBtn');b.disabled=true;b.textContent='가게 여는 중…';const name=($('nameIn').value.trim()||('사장님'+Math.floor(1000+Math.random()*9000))).slice(0,10);
  await fbReady;const local=loadLocal();let cloud=null;if(FB.on){try{cloud=await cloudLoad()}catch(e){console.warn(e)}}
  let src=local;if(cloud&&(!local||(cloud.savedAt||0)>(local.savedAt||0)))src=cloud;
  if(forceNew){const best=src?Math.max(src.bestSent||0,src.total||0):0;S=fresh(name,best);forceNew=false}else S=src?merge(src):fresh(name,0);S.name=name;resetWorld();saveLocal();
