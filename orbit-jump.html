@@ -1,0 +1,546 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>궤도 점프</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one tall phone-shaped play column, centered; HUD and overlays float over the canvas */
+:root {
+  --void: #0b1030;
+  --void-2: #18144a;
+  --ink: #eef0ff;
+  --mute: #9aa3d6;
+  --coral: #ff8a6b;
+  --mint: #6be3c5;
+  --gold: #ffd36b;
+  --font-display: "Do Hyeon", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: radial-gradient(120% 80% at 50% 100%, var(--void-2), var(--void) 70%);
+  background-color: var(--void);
+  color: var(--ink);
+  font-family: var(--font-body);
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.stage {
+  position: relative;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  touch-action: manipulation;
+}
+canvas { display: block; width: 100%; height: 100%; cursor: pointer; }
+.hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding-block: 14px 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.score { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+.label { font-size: 12px; letter-spacing: .12em; color: var(--mute); }
+.best { text-align: right; }
+.best b { font-family: var(--font-display); font-weight: 400; font-size: 22px; display: block; color: var(--gold); }
+.stars-count { font-size: 14px; color: var(--gold); margin-top: 4px; }
+
+.overlay {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(11, 16, 48, .55);
+  backdrop-filter: blur(2px);
+}
+.panel { text-align: center; max-width: 320px; display: grid; gap: 14px; justify-items: center; }
+.panel h1 {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 64px; line-height: 1; margin: 0;
+  letter-spacing: .02em;
+  text-wrap: balance;
+  background: linear-gradient(180deg, var(--ink) 30%, var(--mint));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 40px; margin: 0; color: var(--coral); }
+.panel p { margin: 0; color: var(--mute); line-height: 1.6; font-size: 15px; }
+.panel .big { font-family: var(--font-display); font-size: 72px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.legend { display: grid; gap: 6px; font-size: 14px; color: var(--ink); text-align: left; }
+.legend span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+button {
+  font-family: var(--font-display); font-size: 24px;
+  color: var(--void); background: var(--mint);
+  border: 0; border-radius: 999px;
+  padding: 12px 40px; cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(107, 227, 197, .2), 0 8px 24px rgba(107, 227, 197, .25);
+  transition: transform .12s ease;
+}
+button:hover { transform: translateY(-2px); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+.hint { font-size: 13px; color: var(--mute); }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>
+
+<div class="stage" id="stage">
+  <canvas id="game" aria-label="궤도 점프 게임 화면"></canvas>
+  <div class="hud">
+    <div>
+      <div class="label">점프</div>
+      <div class="score" id="score">0</div>
+      <div class="stars-count" id="starsCount">★ 0</div>
+    </div>
+    <div class="best"><span class="label">최고 기록</span><b id="best">0</b></div>
+  </div>
+
+  <div class="overlay" id="startOverlay">
+    <div class="panel">
+      <h1>궤도 점프</h1>
+      <p>행성 궤도를 도는 탐사선을 조종합니다.<br>알맞은 순간에 탭해서 궤도를 벗어나<br>다음 행성의 중력권에 들어가세요.</p>
+      <div class="legend">
+        <div><span style="background:var(--mint)"></span>점선 안에 들어가면 붙잡혀요</div>
+        <div><span style="background:var(--gold)"></span>별을 먹으면 +2점</div>
+        <div><span style="background:var(--coral)"></span>소행성에 부딪히면 끝</div>
+      </div>
+      <button id="startBtn" type="button">출발</button>
+      <div class="hint">탭 · 클릭 · 스페이스바</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overOverlay" hidden>
+    <div class="panel">
+      <h2 id="overTitle">교신 두절</h2>
+      <div class="big" id="finalScore">0</div>
+      <p id="overMsg">점</p>
+      <button id="retryBtn" type="button">다시 발사</button>
+      <div class="hint">스페이스바로 바로 재시작</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cvs = document.getElementById('game');
+  const ctx = cvs.getContext('2d');
+  const stage = document.getElementById('stage');
+  const $ = id => document.getElementById(id);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const W = 400;           // world width in units
+  let H = 700, S = 1, dpr = 1;
+
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cvs.width = Math.round(r.width * dpr);
+    cvs.height = Math.round(r.height * dpr);
+    S = cvs.width / W;
+    H = cvs.height / S;
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  let best = 0;
+  try { best = +localStorage.getItem('orbit-hop-best') || 0; } catch (e) {}
+  $('best').textContent = best;
+
+  const PALETTE = [
+    ['#ff8a6b', '#b8432f'], ['#6be3c5', '#24806e'], ['#ffd36b', '#b07c1a'],
+    ['#9d8bff', '#4d3db0'], ['#7cc3ff', '#2a6aa8'], ['#ff9ed1', '#a8467c']
+  ];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let state = 'menu';   // menu | play | dying | over
+  let planets, rocks, stars, parts, player, camY, score, hops, starCount, spd, deathT, shake, flash;
+
+  const bg = Array.from({ length: 140 }, () => ({
+    x: Math.random() * W, y: Math.random() * 1200, z: rand(.15, 1), tw: Math.random() * 6.28
+  }));
+
+  function makePlanet(x, y) {
+    const r = rand(16, 30);
+    return {
+      x, y, r, band: r + rand(40, 52),
+      col: PALETTE[(Math.random() * PALETTE.length) | 0],
+      ring: Math.random() < .35, ringTilt: rand(-.6, .6),
+      spin: rand(-1, 1), visited: false, pulse: 0
+    };
+  }
+
+  function genNext() {
+    const last = planets[planets.length - 1];
+    const gap = rand(175, 225) + Math.min(hops * 2.5, 70);
+    let x = last.x + rand(-170, 170);
+    if (Math.abs(x - last.x) < 50) x += (x < W / 2 ? 1 : -1) * 60;
+    x = clamp(x, 70, W - 70);
+    const p = makePlanet(x, last.y - gap);
+    planets.push(p);
+
+    // star between planets
+    if (Math.random() < .55) {
+      const t = rand(.35, .65);
+      stars.push({ x: last.x + (p.x - last.x) * t + rand(-30, 30), y: last.y + (p.y - last.y) * t, got: false, t: 0 });
+    }
+    // asteroid crossing the gap
+    const chance = Math.min(.1 + planets.length * .025, .6);
+    if (planets.length > 4 && Math.random() < chance) {
+      const dir = Math.random() < .5 ? 1 : -1;
+      rocks.push({
+        x: rand(0, W), y: last.y + (p.y - last.y) * rand(.3, .7),
+        vx: dir * rand(45, 80 + Math.min(hops * 3, 60)), r: rand(7, 12),
+        rot: 0, vr: rand(-3, 3), seed: Math.random()
+      });
+    }
+  }
+
+  function reset() {
+    planets = []; rocks = []; stars = []; parts = [];
+    score = 0; hops = 0; starCount = 0; spd = 230; shake = 0; flash = 0;
+    const first = makePlanet(W / 2, H * .68);
+    first.visited = true;
+    planets.push(first);
+    while (planets[planets.length - 1].y > -H) genNext();
+    player = { mode: 'orbit', planet: first, a: -Math.PI / 2, dir: 1, R: first.band - 12, x: 0, y: 0, vx: 0, vy: 0, from: null, flyT: 0 };
+    camY = first.y - H * .62;
+    updateHud();
+  }
+
+  function updateHud() {
+    $('score').textContent = score;
+    $('starsCount').textContent = '★ ' + starCount;
+  }
+
+  function burst(x, y, n, colors, sp = 120, life = .8) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.283, v = rand(.2, 1) * sp;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, c: colors[i % colors.length], s: rand(1.5, 3.5) });
+    }
+  }
+
+  function launch() {
+    if (state !== 'play' || player.mode !== 'orbit') return;
+    const { a, dir } = player;
+    player.vx = -Math.sin(a) * dir * spd;
+    player.vy = Math.cos(a) * dir * spd;
+    player.from = player.planet;
+    player.planet = null;
+    player.mode = 'fly';
+    player.flyT = 0;
+    burst(player.x, player.y, 8, ['#eef0ff', '#6be3c5'], 60, .4);
+  }
+
+  function die(reason) {
+    if (state !== 'play') return;
+    state = 'dying';
+    deathT = 0;
+    shake = reduceMotion ? 0 : 10;
+    burst(player.x, player.y, 40, ['#ff8a6b', '#ffd36b', '#eef0ff'], 200, 1.1);
+    $('overTitle').textContent = reason;
+  }
+
+  function showOver() {
+    state = 'over';
+    const isBest = score > best;
+    if (isBest) {
+      best = score;
+      try { localStorage.setItem('orbit-hop-best', String(best)); } catch (e) {}
+      $('best').textContent = best;
+    }
+    $('finalScore').textContent = score;
+    $('overMsg').textContent = isBest
+      ? `새 최고 기록이에요! 행성 ${hops}개 · 별 ${starCount}개`
+      : `행성 ${hops}개 · 별 ${starCount}개 · 최고 ${best}점`;
+    $('overOverlay').hidden = false;
+    $('retryBtn').focus({ preventScroll: true });
+  }
+
+  function start() {
+    reset();
+    state = 'play';
+    $('startOverlay').hidden = true;
+    $('overOverlay').hidden = true;
+    cvs.focus?.();
+  }
+
+  // ---------- update ----------
+  function update(dt) {
+    // particles always move
+    for (const p of parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .97; p.vy *= .97; p.life -= dt; }
+    parts = parts.filter(p => p.life > 0);
+    for (const r of rocks) {
+      r.x += r.vx * dt; r.rot += r.vr * dt;
+      if (r.x < -20) r.x += W + 40; else if (r.x > W + 20) r.x -= W + 40;
+    }
+    for (const p of planets) { p.pulse = Math.max(0, p.pulse - dt * 1.5); }
+    for (const s of stars) s.t += dt;
+    shake = Math.max(0, shake - dt * 30);
+    flash = Math.max(0, flash - dt * 2);
+
+    if (state === 'dying') {
+      deathT += dt;
+      if (deathT > .9) showOver();
+      return;
+    }
+    if (state === 'menu') {
+      // idle orbit behind the title screen
+      const pl = player.planet;
+      player.a += player.dir * (spd * .6 / player.R) * dt;
+      player.x = pl.x + Math.cos(player.a) * player.R;
+      player.y = pl.y + Math.sin(player.a) * player.R;
+      return;
+    }
+    if (state !== 'play') return;
+
+    if (player.mode === 'orbit') {
+      const pl = player.planet;
+      player.a += player.dir * (spd / player.R) * dt;
+      player.x = pl.x + Math.cos(player.a) * player.R;
+      player.y = pl.y + Math.sin(player.a) * player.R;
+      if (Math.random() < .5) parts.push({ x: player.x, y: player.y, vx: 0, vy: 0, life: .35, max: .35, c: '#6be3c5', s: 1.6 });
+    } else {
+      player.flyT += dt;
+      player.x += player.vx * dt;
+      player.y += player.vy * dt;
+      parts.push({ x: player.x, y: player.y, vx: rand(-10, 10), vy: rand(-10, 10), life: .6, max: .6, c: '#eef0ff', s: 2.2 });
+
+      for (const q of planets) {
+        if (q === player.from) continue;
+        const dx = player.x - q.x, dy = player.y - q.y;
+        const d = Math.hypot(dx, dy);
+        if (d < q.band) {
+          const cross = dx * player.vy - dy * player.vx;
+          player.mode = 'orbit';
+          player.planet = q;
+          player.R = Math.max(d, q.r + 14);
+          player.a = Math.atan2(dy, dx);
+          player.dir = cross > 0 ? 1 : -1;
+          q.pulse = 1;
+          if (!q.visited) {
+            q.visited = true;
+            hops++; score++;
+            spd = 230 + Math.min(hops * 4, 130);
+            burst(player.x, player.y, 14, [q.col[0], '#eef0ff'], 90, .6);
+            updateHud();
+          }
+          break;
+        }
+      }
+      if (player.mode === 'fly') {
+        if (player.x < -12 || player.x > W + 12 || player.y > camY + H + 20 || player.flyT > 3.2) die('우주 미아');
+      }
+    }
+
+    for (const s of stars) {
+      if (!s.got && Math.hypot(player.x - s.x, player.y - s.y) < 16) {
+        s.got = true; starCount++; score += 2; flash = .6;
+        burst(s.x, s.y, 16, ['#ffd36b', '#fff4c9'], 110, .7);
+        updateHud();
+      }
+    }
+    for (const r of rocks) {
+      if (Math.hypot(player.x - r.x, player.y - r.y) < r.r + 4) { die('소행성 충돌'); break; }
+    }
+
+    // camera
+    const focusY = player.mode === 'orbit' ? player.planet.y : player.y;
+    const target = focusY - H * .62;
+    camY += (target - camY) * Math.min(1, dt * 3);
+
+    // generate & cull
+    while (planets[planets.length - 1].y > camY - H * .6) genNext();
+    const cut = camY + H + 250;
+    planets = planets.filter(p => p.y < cut || p === player.planet);
+    rocks = rocks.filter(r => r.y < cut);
+    stars = stars.filter(s => s.y < cut && !(s.got && s.t > 99));
+  }
+
+  // ---------- draw ----------
+  function drawPlanet(p, t) {
+    const [c1, c2] = p.col;
+    // capture zone
+    ctx.save();
+    ctx.strokeStyle = p.visited ? 'rgba(154,163,214,.18)' : 'rgba(107,227,197,.45)';
+    ctx.lineWidth = p.visited ? 1 : 1.4;
+    ctx.setLineDash([3, 6]);
+    ctx.lineDashOffset = -t * 10 * p.spin;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.band + p.pulse * 8, 0, 6.283); ctx.stroke();
+    ctx.restore();
+
+    if (p.pulse > 0) {
+      ctx.strokeStyle = `rgba(238,240,255,${p.pulse * .6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + (1 - p.pulse) * 40, 0, 6.283); ctx.stroke();
+    }
+
+    // glow
+    const g = ctx.createRadialGradient(p.x, p.y, p.r * .6, p.x, p.y, p.r * 2.2);
+    g.addColorStop(0, c1 + '55'); g.addColorStop(1, c1 + '00');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.2, 0, 6.283); ctx.fill();
+
+    // ring back half
+    if (p.ring) drawRing(p, true);
+
+    // body
+    const b = ctx.createRadialGradient(p.x - p.r * .4, p.y - p.r * .4, p.r * .1, p.x, p.y, p.r);
+    b.addColorStop(0, c1); b.addColorStop(1, c2);
+    ctx.fillStyle = b;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+    // bands
+    ctx.save();
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    for (let i = -2; i <= 2; i++) {
+      const off = ((t * 6 * p.spin) % 20);
+      ctx.fillRect(p.x - p.r, p.y + i * p.r * .45 + off * .2, p.r * 2, p.r * .12);
+    }
+    ctx.restore();
+
+    if (p.ring) drawRing(p, false);
+  }
+
+  function drawRing(p, back) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.ringTilt);
+    ctx.strokeStyle = 'rgba(238,240,255,.55)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.r * 1.7, p.r * .45, 0, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawRock(r) {
+    ctx.save();
+    ctx.translate(r.x, r.y);
+    ctx.rotate(r.rot);
+    ctx.fillStyle = '#5b4a6e';
+    ctx.strokeStyle = '#ff8a6b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * 6.283;
+      const rr = r.r * (.75 + .25 * Math.sin(i * 2.7 + r.seed * 10));
+      i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawStar(s) {
+    const k = 1 + Math.sin(s.t * 4) * .15;
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.t * .8);
+    ctx.scale(k, k);
+    ctx.fillStyle = '#ffd36b';
+    ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 12;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = i / 10 * 6.283 - Math.PI / 2, rr = i % 2 ? 3.5 : 8;
+      i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    let ang;
+    if (player.mode === 'fly') ang = Math.atan2(player.vy, player.vx);
+    else ang = player.a + player.dir * Math.PI / 2;
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(ang);
+    ctx.shadowColor = '#6be3c5'; ctx.shadowBlur = 14;
+    ctx.fillStyle = '#eef0ff';
+    ctx.beginPath();
+    ctx.moveTo(9, 0); ctx.lineTo(-6, -5.5); ctx.lineTo(-3, 0); ctx.lineTo(-6, 5.5);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // launch preview: short tangent guide while orbiting
+    if (player.mode === 'orbit' && state === 'play') {
+      const tx = -Math.sin(player.a) * player.dir, ty = Math.cos(player.a) * player.dir;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(238,240,255,.28)';
+      ctx.setLineDash([2, 5]);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(player.x + tx * 12, player.y + ty * 12);
+      ctx.lineTo(player.x + tx * 70, player.y + ty * 70);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function draw(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+    // parallax starfield (screen space)
+    ctx.setTransform(S, 0, 0, S, 0, 0);
+    for (const s of bg) {
+      const span = H + 20;
+      let y = (s.y - camY * s.z * .35) % span; if (y < 0) y += span;
+      const a = .25 + .5 * s.z * (.6 + .4 * Math.sin(t * 2 + s.tw));
+      ctx.fillStyle = `rgba(238,240,255,${a})`;
+      ctx.fillRect(s.x, y - 10, s.z * 1.8, s.z * 1.8);
+    }
+    if (flash > 0) {
+      ctx.fillStyle = `rgba(255,211,107,${flash * .08})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    const sx = shake ? rand(-shake, shake) : 0, sy = shake ? rand(-shake, shake) : 0;
+    ctx.setTransform(S, 0, 0, S, sx * S, (-camY + sy) * S);
+
+    for (const p of planets) drawPlanet(p, t);
+    for (const s of stars) if (!s.got) drawStar(s);
+    for (const r of rocks) drawRock(r);
+    for (const p of parts) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+    }
+    ctx.globalAlpha = 1;
+    if (state !== 'dying' && state !== 'over') drawPlayer();
+  }
+
+  // ---------- loop ----------
+  let last = performance.now(), clock = 0;
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now; clock += dt;
+    update(dt);
+    draw(clock);
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- input ----------
+  cvs.addEventListener('pointerdown', e => { e.preventDefault(); launch(); });
+  addEventListener('keydown', e => {
+    if (e.code !== 'Space' && e.code !== 'Enter') return;
+    if (e.target instanceof HTMLButtonElement && e.code === 'Enter') return;
+    e.preventDefault();
+    if (e.repeat) return;
+    if (state === 'menu' || state === 'over') start();
+    else launch();
+  });
+  $('startBtn').addEventListener('click', start);
+  $('retryBtn').addEventListener('click', start);
+
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
